@@ -122,7 +122,7 @@ def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray
 
     weighted_residual = ((feedback_measurements- feedback) * weights).detach()
     plt.subplot(1, 3, 3)
-    plt.imshow(weighted_residual, extent=extent, interpolation="nearest")
+    plt.imshow(weighted_residual, extent=extent, interpolation="nearest", cmap='magma')
     plt.title("c. Weighted residual")
     plt.xlabel('$g_B$')
     plt.ylabel('$g_A$')
