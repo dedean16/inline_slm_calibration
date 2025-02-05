@@ -19,6 +19,9 @@ def photobleaching_model(factor, decay, t):
 
 
 def detrend(gray_value0, gray_value1, measurements: np.ndarray, weights = 1.0, do_plot=False):
+    if not isinstance(weights, torch.Tensor):
+        weights = torch.tensor(weights, dtype=torch.float32)
+
     m = torch.tensor(measurements).t().contiguous().view(-1) # flatten("F")
     w = torch.tensor(weights).t().contiguous().view(-1)
     m = m / m.abs().mean()
@@ -156,6 +159,9 @@ def learn_field(
     Returns:
        nonlinearity, a, b, P_bg, phase, amplitude
     """
+    if not isinstance(weights, torch.Tensor):
+        weights = torch.tensor(weights, dtype=torch.float32)
+
     measurements = torch.tensor(measurements, dtype=torch.float32)
     measurements = measurements / measurements.std()                                # Normalize by std
     decay, factor, received_energy = detrend(gray_values0, gray_values1, measurements, weights, do_plot)

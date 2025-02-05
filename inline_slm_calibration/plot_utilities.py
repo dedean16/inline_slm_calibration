@@ -31,7 +31,7 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     plt.subplots_adjust(left=0.1, right=0.95, hspace=0.35, wspace=0.35, top=0.92, bottom=0.12)
 
     plt.subplot(1, 2, 1)
-    plt.errorbar(ref_gray_values, ref_phase, yerr=ref_phase_std, linestyle='dashed', color='C0', ecolor=lightC0, label='Reference')
+    plt.errorbar(ref_gray_values, ref_phase, yerr=ref_phase_std, linestyle='dashed', color='C0', ecolor=lightC0, label='TG')
     plt.errorbar(gray_values, phase, yerr=phase_std, color='C1', ecolor=lightC1, label='Inline (ours)')
     plt.xlabel('Gray value')
     plt.ylabel('Phase (rad)')
@@ -39,7 +39,7 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     plt.legend()
 
     plt.subplot(1, 2, 2)
-    plt.errorbar(ref_gray_values, ref_amplitude_norm, yerr=ref_amplitude_norm_std, linestyle='dashed', fmt='', ecolor=lightC0, label='Reference')
+    plt.errorbar(ref_gray_values, ref_amplitude_norm, yerr=ref_amplitude_norm_std, linestyle='dashed', fmt='', ecolor=lightC0, label='TG')
     plt.plot(ref_gray_values, ref_amplitude_norm, linestyle='dashed', color='C0', zorder=3)
     plt.errorbar(gray_values, amplitude_norm, yerr=amplitude_norm_std, color='C1', ecolor=lightC1, label='Inline (ours)')
     plt.xlabel('Gray value')
@@ -48,22 +48,14 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     plt.title('b. Normalized amplitude response')
     plt.legend()
 
-    # Phase difference
-    plt.figure()
-    plt.subplots_adjust(left=0.2, right=0.95, top=0.9, bottom=0.15)
-    plt.plot(np.diff(ref_phase))
-    plt.title('Phase response slope')
-    plt.xlabel('Gray level')
-    plt.ylabel('$d\\phi/dg$')
-
     # Plot field response in complex plane
     plt.figure()
     amplitude_norm = amplitude_norm / amplitude_norm.mean()
     E_norm = amplitude_norm * np.exp(1.0j * phase)
     ref_amplitude_norm = ref_amplitude_norm / ref_amplitude_norm.mean()
     E_ref_norm = ref_amplitude_norm * np.exp(1.0j * ref_phase)
-    plt.plot(E_ref_norm.real, E_ref_norm.imag, label="Reference")
-    plt.plot(E_norm.real, E_norm.imag, label="Our method")
+    plt.plot(E_ref_norm.real, E_ref_norm.imag, label="TG")
+    plt.plot(E_norm.real, E_norm.imag, label="Inline (ours)")
     plt.legend()
 
     plt.show()

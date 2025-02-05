@@ -84,7 +84,7 @@ def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False)
 
 def import_inline_calibration(inline_file, do_plot=False, noise_analysis_iterations=1000):
     """
-    Import an inline calibration.
+    Import an inline calibration and do noise analysis.
 
     Args:
         inline_file: Path to npz file containing the keys:
@@ -98,6 +98,7 @@ def import_inline_calibration(inline_file, do_plot=False, noise_analysis_iterati
         gv0: Gray values for group A.
         gv1: Gray values for group B.
         measurements: 2D array containing the signal per gray value pair.
+        weights: Weights based on the noise analysis.
     """
     npz_data = np.load(inline_file)
     measurements = npz_data["frames"].mean(axis=(0, 1, 2)) - npz_data['dark_frame'].mean()
@@ -110,23 +111,35 @@ def import_inline_calibration(inline_file, do_plot=False, noise_analysis_iterati
     # Fit noise model
     def noise_model(x, a, b, c):
         return a * x ** 2 + b * x + c
-
-    plt.loglog(measurements.flatten(), stds.flatten() ** 2, '+', color='tab:blue', label='Measurement')
-    plt.loglog(measurements.flatten(), noise_model(measurements, alpha, beta, basevar).flatten(), '.k', label='Least Squares Fit')
-    plt.xlabel('Mean signal')
-    plt.ylabel('Signal variance')
-    plt.legend()
     weights = noise_model(measurements, 0, beta, basevar) ** (-0.5)
     weights = weights / weights.mean()
 
-    plt.figure()
-    plt.plot(measurements, weights, '.k')
-    plt.xlabel('Mean signal')
-    plt.ylabel('Weights')
-    plt.show()
-    plt.pause(0.01)
-
     if do_plot:
+        # Plot noise model fit
+        plt.loglog(measurements.flatten(), stds.flatten() ** 2, '+', color='tab:blue', label='Measurement')
+        plt.loglog(measurements.flatten(), noise_model(measurements, alpha, beta, basevar).flatten(), '.k',
+                   label='Least Squares Fit')
+        plt.xlabel('Mean signal')
+        plt.ylabel('Signal variance')
+        plt.title('Noise model')
+        plt.legend()
+
+        # Plot weights vs mean signal
+        plt.figure()
+        plt.plot(measurements, weights, '.k')
+        plt.xlabel('Mean signal')
+        plt.ylabel('Weights')
+        plt.title('Weights')
+
+        # Plot weights vs gray values
+        plt.figure()
+        extent = (gv1.min() - 0.5, gv1.max() + 0.5, gv0.max() + 0.5, gv0.min() - 0.5)
+        plt.imshow(weights, extent=extent, interpolation='nearest')
+        plt.xlabel('$g_B$')
+        plt.ylabel('$g_A$')
+        plt.title('Weights')
+
+        # Plot dark frame histogram
         plt.figure()
         plt.hist(npz_data['dark_frame'].flatten(), bins=range(-100, 100))
         plt.title('Dark frame noise distribution')
