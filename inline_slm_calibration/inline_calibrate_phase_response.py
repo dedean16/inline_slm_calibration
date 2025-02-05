@@ -23,7 +23,7 @@ plt.rcParams.update({'font.size': 14})
 settings = {
     "do_plot": False,
     "do_end_plot": True,
-    "plot_per_its": 300,
+    "plot_per_its": 500,
     "nonlinearity": 2.0,
     "learning_rate": 0.3,
     "iterations": 3000,
@@ -49,7 +49,7 @@ for n_f, filepath in enumerate(inline_files):
 
     # Learn phase response
     nonlin, a, b, P_bg, phase, amplitude, amplitude_norm = learn_field(
-        gray_values0=gv0, gray_values1=gv1, measurements=measurements, **settings)
+        gray_values0=gv0, gray_values1=gv1, measurements=measurements, weights=weights, **settings)
 
     print(f"a={a:.4f} (1.0), b={b:.4f}, P_bg={P_bg:.4f}, nonlin = {nonlin:.4f} ({settings['nonlinearity']})")
 

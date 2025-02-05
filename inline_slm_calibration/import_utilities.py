@@ -3,6 +3,7 @@ Utilities for importing calibrations.
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 
 
 def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False):
@@ -91,8 +92,38 @@ def import_inline_calibration(inline_file, do_plot=False):
     """
     npz_data = np.load(inline_file)
     measurements = npz_data["frames"].mean(axis=(0, 1, 2)) - npz_data['dark_frame'].mean()
+    stds = npz_data["frames"].std(axis=(0, 1, 2))
     gv0 = npz_data['gray_values1'][0]
     gv1 = npz_data['gray_values2'][0]
+
+    # Fit noise model
+    def noise_model(x, a, b, c):
+        return a * x ** 2 + b * x + c
+
+    alpha = torch.tensor(0.5, requires_grad=True)
+    beta = torch.tensor(10.0, requires_grad=True)
+    var = torch.tensor(npz_data['dark_frame'].std() ** 2, requires_grad=True)
+    optimizer = torch.optim.Adam([alpha, beta, var], lr=0.1)
+    measurements = torch.tensor(measurements, dtype=torch.float32)
+    stds = torch.tensor(stds, dtype=torch.float32)
+    for _ in range(1000):
+        optimizer.zero_grad()
+        loss = torch.mean((stds ** 2 - noise_model(measurements, alpha, beta, var)) ** 2)
+        loss.backward()
+        optimizer.step()
+
+    alpha = alpha.detach()
+    beta = beta.detach()
+    var = var.detach()
+    plt.loglog(measurements, stds ** 2, 'o')
+    plt.loglog(measurements, noise_model(measurements, alpha, beta, var), 'o')
+    weights = noise_model(measurements, 0, beta, var).pow(-0.5)
+    weights = weights / weights.mean()
+
+    plt.figure()
+    plt.plot(measurements, weights)
+    plt.show()
+    plt.pause(0.01)
 
     if do_plot:
         plt.figure()
@@ -102,4 +133,4 @@ def import_inline_calibration(inline_file, do_plot=False):
         plt.ylabel('Counts')
         plt.pause(0.01)
 
-    return gv0, gv1, measurements
+    return gv0, gv1, measurements, weights

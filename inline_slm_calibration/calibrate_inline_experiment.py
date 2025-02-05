@@ -1,5 +1,5 @@
 """
-Calibrate the SLM using a new inline measurement with non-linear fitting analysis.
+Calibration measurements for the SLM using our new inline method with non-linear fitting analysis.
 
 Note: When newly running this script, make sure the defined file and folder paths are valid, and update if required.
 Some folders from directories.py are used.
@@ -26,14 +26,14 @@ from filters import DigitalNotchFilter
 from experiment_helper_classes import RandomSLMShutter, OffsetRemover
 from experiment_helper_functions import (autodelay_scanner, converge_parking_spot, park_beam, get_com_by_vid_pid,
                                          inline_calibrate)
-from online_slm_calibration.helper_functions import gitinfo
-from online_slm_calibration.directories import local_data
+from inline_slm_calibration.helper_functions import gitinfo
+from inline_slm_calibration.directories import data_folder
 
 
 # ========== Settings ========== #
 
 # Save filepath and filename prefix
-save_path = Path(local_data)
+save_path = Path(data_folder)
 filename_prefix = 'inline-slm-calibration_'
 
 do_quick_test = False

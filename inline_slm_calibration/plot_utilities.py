@@ -1,6 +1,24 @@
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
+from matplotlib.colors import ListedColormap
+
+
+def colormap_adjust_piecewise(cmap_name: str, x_points=None, y_points=None):
+    if x_points is None:
+        x_points = (0.0, 0.1, 0.2, 0.4, 1.0)
+    if y_points is None:
+        y_points = (0.0, 0.5, 0.75, 0.85, 1.0)
+
+    x = np.linspace(0.0, 1.0, 256)
+    y = np.interp(x, x_points, y_points)
+
+    # Get the colors from the colormap using the transformed values
+    cmap = plt.cm.get_cmap(cmap_name)
+    new_colors = cmap(y)
+
+    # Create a new colormap with the transformed colors
+    return ListedColormap(new_colors, name=f'{cmap_name}_piecewise{x_points},{y_points}')
 
 
 def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amplitude_norm_std,
@@ -65,38 +83,41 @@ def plot_feedback_fit(feedback_measurements, feedback, gray_values0, gray_values
     extent = (gray_values1.min()-0.5, gray_values1.max()+0.5, gray_values0.max()+0.5, gray_values0.min()-0.5)
     vmin = torch.minimum(feedback_measurements.min(), feedback.min())
     vmax = torch.maximum(feedback_measurements.max(), feedback.max())
-    plt.imshow(feedback_measurements.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax)
+    cmap = colormap_adjust_piecewise('viridis')
+    plt.imshow(feedback_measurements.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax, cmap=cmap)
     plt.title("Measured feedback")
     plt.colorbar()
 
     plt.subplot(1, 3, 3)
-    plt.imshow(feedback.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax)
+    plt.imshow(feedback.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax, cmap=cmap)
     plt.title("Predicted feedback")
     plt.colorbar()
 
 
-def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray_values1):
+def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray_values1, weights):
     extent = (gray_values1.min()-0.5, gray_values1.max()+0.5, gray_values0.max()+0.5, gray_values0.min()-0.5)
     vmin = torch.minimum(feedback_measurements.min(), feedback.min())
     vmax = torch.maximum(feedback_measurements.max(), feedback.max())
 
     plt.subplot(1, 3, 1)
-    plt.imshow(feedback_measurements.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax)
+    cmap = colormap_adjust_piecewise('viridis')
+    plt.imshow(feedback_measurements.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax, cmap=cmap)
     plt.title("a. Measured signal")
     plt.xlabel('$g_B$')
     plt.ylabel('$g_A$')
     plt.colorbar()
 
     plt.subplot(1, 3, 2)
-    plt.imshow(feedback.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax)
+    plt.imshow(feedback.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax, cmap=cmap)
     plt.title("b. Fit signal")
     plt.xlabel('$g_B$')
     plt.ylabel('$g_A$')
     plt.colorbar()
 
+    weighted_residual = ((feedback_measurements- feedback) * weights).detach()
     plt.subplot(1, 3, 3)
-    plt.imshow((feedback_measurements.detach() - feedback.detach()).abs(), extent=extent, interpolation="nearest")
-    plt.title("c. Residual")
+    plt.imshow(weighted_residual, extent=extent, interpolation="nearest", cmap='magma')
+    plt.title("c. Weighted residual")
     plt.xlabel('$g_B$')
     plt.ylabel('$g_A$')
     plt.colorbar()
