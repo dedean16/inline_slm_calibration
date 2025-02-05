@@ -44,7 +44,7 @@ nonlin_all = [None] * len(inline_files)
 # Process files
 for n_f, filepath in enumerate(inline_files):
     # === Import and process inline measurement === #
-    gv0, gv1, measurements = import_inline_calibration(filepath, settings['do_plot'])
+    gv0, gv1, measurements, weights = import_inline_calibration(filepath, settings['do_plot'])
     measurements = detrend(gv0, gv1, measurements, do_plot=settings['do_plot'])         # Compensate for photo-bleaching
 
     # Learn phase response
