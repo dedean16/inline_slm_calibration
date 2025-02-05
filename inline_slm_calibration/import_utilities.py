@@ -1,9 +1,13 @@
 """
 Utilities for importing calibrations.
 """
+# External (3rd party)
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+
+# Internal
+from helper_functions import fit_quadratic
 
 
 def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False):
@@ -78,7 +82,7 @@ def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False)
     return ref_gray, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std
 
 
-def import_inline_calibration(inline_file, do_plot=False):
+def import_inline_calibration(inline_file, do_plot=False, noise_analysis_iterations=1000):
     """
     Import an inline calibration.
 
@@ -87,6 +91,7 @@ def import_inline_calibration(inline_file, do_plot=False):
             'frames': 4D array containing the raw signal measurements. First two dims may be used to store the frames.
             'gray_values1', 'gray_values2': correspond to gray values of group A and B.
             'dark_frame': contains frame taken with laser blocked.
+        noise_analysis_iterations: Number of iterations to fit
         do_plot: Plot dark_frame noise statistics.
 
     Returns:
@@ -100,32 +105,24 @@ def import_inline_calibration(inline_file, do_plot=False):
     gv0 = npz_data['gray_values1'][0]
     gv1 = npz_data['gray_values2'][0]
 
+    alpha, beta, basevar = fit_quadratic(measurements, stds**2)
+
     # Fit noise model
     def noise_model(x, a, b, c):
         return a * x ** 2 + b * x + c
 
-    alpha = torch.tensor(0.5, requires_grad=True)
-    beta = torch.tensor(10.0, requires_grad=True)
-    var = torch.tensor(npz_data['dark_frame'].std() ** 2, requires_grad=True)
-    optimizer = torch.optim.Adam([alpha, beta, var], lr=0.1)
-    measurements = torch.tensor(measurements, dtype=torch.float32)
-    stds = torch.tensor(stds, dtype=torch.float32)
-    for _ in range(1000):
-        optimizer.zero_grad()
-        loss = torch.mean((stds ** 2 - noise_model(measurements, alpha, beta, var)) ** 2)
-        loss.backward()
-        optimizer.step()
-
-    alpha = alpha.detach()
-    beta = beta.detach()
-    var = var.detach()
-    plt.loglog(measurements, stds ** 2, 'o')
-    plt.loglog(measurements, noise_model(measurements, alpha, beta, var), 'o')
-    weights = noise_model(measurements, 0, beta, var).pow(-0.5)
+    plt.loglog(measurements.flatten(), stds.flatten() ** 2, '+', color='tab:blue', label='Measurement')
+    plt.loglog(measurements.flatten(), noise_model(measurements, alpha, beta, basevar).flatten(), '.k', label='Least Squares Fit')
+    plt.xlabel('Mean signal')
+    plt.ylabel('Signal variance')
+    plt.legend()
+    weights = noise_model(measurements, 0, beta, basevar) ** (-0.5)
     weights = weights / weights.mean()
 
     plt.figure()
-    plt.plot(measurements, weights)
+    plt.plot(measurements, weights, '.k')
+    plt.xlabel('Mean signal')
+    plt.ylabel('Weights')
     plt.show()
     plt.pause(0.01)
 

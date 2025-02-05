@@ -1,3 +1,4 @@
+import numpy as np
 import h5py
 import git
 
@@ -68,3 +69,18 @@ def gitinfo() -> dict:
     commit_timestamp = repo.head.object.committed_datetime.timestamp()
     git_info = {'sha': sha, 'working_dir': working_dir, 'diff': diff, 'commit_timestamp': commit_timestamp}
     return git_info
+
+
+def fit_quadratic(x, y):
+    """Fit quadratic function to data, using least squares fit."""
+    # Flatten
+    xf = x.flatten()
+    yf = y.flatten()
+
+    # Create the design matrix for quadratic fitting
+    X = np.vstack([xf ** 2, xf, np.ones_like(xf)]).T
+
+    # Perform linear regression using numpy's least squares method
+    coefficients, _, _, _ = np.linalg.lstsq(X, yf, rcond=None)
+    a, b, c = coefficients
+    return a, b, c
