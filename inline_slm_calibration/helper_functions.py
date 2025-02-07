@@ -1,6 +1,11 @@
+"""
+Various helper functions.
+"""
+# External (3rd party)
 import numpy as np
 import h5py
 import git
+import matplotlib.pyplot as plt
 
 
 def add_dict_as_hdf5group(name: str, dic: dict, hdf: h5py.File | h5py.Group):
@@ -72,7 +77,7 @@ def gitinfo() -> dict:
 
 
 def fit_quadratic(x, y):
-    """Fit quadratic function to data, using least squares fit."""
+    """Fit quadratic function to data, using least-squares fit."""
     # Flatten
     xf = x.flatten()
     yf = y.flatten()

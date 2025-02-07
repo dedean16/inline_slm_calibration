@@ -9,12 +9,80 @@ from tqdm import tqdm
 
 # Internal
 from plot_utilities import plot_field_response, plot_feedback_fit, plot_result_feedback_fit
+from helper_functions import fit_quadratic
 
 
-def detrend(gray_value0, gray_value1, measurements: np.ndarray, weights = 1.0, do_plot=False):
-    if not isinstance(weights, torch.Tensor):
-        weights = torch.tensor(weights, dtype=torch.float32)
+# Fit noise model
+def noise_model(x, a, b, c):
+    """
+    The noise model is used to determine the influence of different noise sources.
+    variance = ax² + bx + c
 
+    Args:
+        x: Measured signal
+        a: Image variation and technical noise
+        b: Shot noise σ²∝⟨x⟩
+        c: Read-out noise
+    """
+    return a * x ** 2 + b * x + c
+
+
+def compute_weights(measurements, stds, do_plot=False):
+    """
+    Compute weights
+
+    Compute weights by fitting a noise model. Compute weights based on shot-noise and read-out noise. Technical noise
+    is neglected.
+
+    Args:
+        measurements: Average signal per measurement
+        stds: Standard deviation per measurement
+        do_plot: Plot fitting results
+
+    Returns:
+        weights: Weights based on the noise analysis.
+    """
+    a_n, b_n, c_n = fit_quadratic(measurements, stds**2)
+    w = 1 / noise_model(measurements, 0, b_n, c_n) ** 2
+    weights = w / w.mean()
+
+    if do_plot:
+        # Plot noise model fit
+        plt.loglog(measurements.flatten(), stds.flatten() ** 2, '+', color='tab:blue', label='Measurement')
+        plt.loglog(measurements.flatten(), noise_model(measurements, a_n, b_n, c_n).flatten(), '.k',
+                   label='Least Squares Fit')
+        plt.xlabel('Mean signal')
+        plt.ylabel('Signal variance')
+        plt.title('Noise model')
+        plt.legend()
+
+        # Plot weights vs mean signal
+        plt.figure()
+        plt.plot(measurements, weights, '.k')
+        plt.xlabel('Mean signal')
+        plt.ylabel('Weights')
+        plt.title('Weights')
+
+        # Plot weights vs gray values
+        plt.figure()
+        extent = (0, 1, 1, 0)
+        plt.imshow(weights, extent=extent, interpolation='nearest')
+        plt.title('Weights')
+        plt.show()
+
+    return weights
+
+
+def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, do_plot=False):
+    """
+    Fit photobleaching
+
+    Args:
+        TODO
+
+    Returns:
+        TODO
+    """
     m = torch.tensor(measurements).t().contiguous().view(-1) # flatten("F")
     w = torch.tensor(weights).t().contiguous().view(-1)
     m = m / m.abs().mean()
@@ -134,10 +202,11 @@ def learn_field(
         gray_values0: np.array,
         gray_values1: np.array,
         measurements: np.array,
-        weights = 1.0,
+        stds: np.array,
         nonlinearity: float = 1.0,
         iterations: int = 50,
         do_plot: bool = False,
+        do_weights_plot: bool = False,
         do_end_plot: bool = False,
         plot_per_its: int = 10,
         learning_rate: float = 0.1,
@@ -145,18 +214,18 @@ def learn_field(
     """
     Learn the field response from dual gray value measurements.
 
-    This function uses the signal_model:
-    signal_power = |a⋅E(g_A) + b⋅E(g_B)|^(2N) + S_bg
-
-    For details, please see the signal_model function docstring.
+    Signal is normalized by std to make parameters (such as optimizer step size) independent of raw signal magnitude.
+    For model details, please see the signal_model function docstring.
 
     Args:
         gray_values0: Contains gray values of group A, corresponding to dim 0 of feedback.
         gray_values1: Contains gray values of group B, corresponding to dim 1 of feedback.
-        measurements: Signal measurements as 2D array. Indices correspond to gray_values0 and gray_values1.
+        measurements: Average signal measurements as 2D array. Indices correspond to gray_values0 and gray_values1.
+        stds: Standard deviations per signal measurement.
         nonlinearity: Expected nonlinearity coefficient. 1 = linear, 2 = 2PEF, 3 = 3PEF, etc., 0 = detector is broken :)
         iterations: Number of learning iterations.
         do_plot: If True, plot during learning.
+        do_weights_plot: If True, plot noise analysis results.
         do_end_plot: If True, plot after learning.
         plot_per_its: Plot per this many learning iterations.
         learning_rate: Learning rate of the optimizer.
@@ -164,12 +233,15 @@ def learn_field(
     Returns:
        nonlinearity, a, b, S_bg, phase, amplitude, normalized amplitude
     """
-    if not isinstance(weights, torch.Tensor):
-        weights = torch.tensor(weights, dtype=torch.float32)
-
+    # Initialize
     measurements = torch.tensor(measurements, dtype=torch.float32)
     measurements = measurements / measurements.std()                                # Normalize by std
-    decay, factor, received_energy = detrend(gray_values0, gray_values1, measurements, weights, do_plot)
+
+    weights_np = compute_weights(measurements, stds, do_weights_plot)
+    weights = torch.tensor(weights_np, dtype=torch.float32)
+
+    # Fit signal decay due to photobleaching
+    decay, factor, received_energy = fit_bleaching(gray_values0, gray_values1, measurements, weights, do_plot)
 
     # Initial guess
     E = torch.exp(2j * np.pi * torch.rand(256))                                     # Field response

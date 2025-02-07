@@ -3,11 +3,8 @@ Utilities for importing calibrations and analyzing noise.
 """
 # External (3rd party)
 import numpy as np
+from numpy import ndarray as nd
 import matplotlib.pyplot as plt
-import torch
-
-# Internal
-from helper_functions import fit_quadratic
 
 
 def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False):
@@ -82,23 +79,21 @@ def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False)
     return ref_gray, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std
 
 
-def import_inline_calibration(inline_file, do_plot=False, noise_analysis_iterations=1000):
+def import_inline_calibration(inline_file, do_plot=False) -> tuple[nd, nd, nd, nd]:
     """
-    Import an inline calibration and do noise analysis.
+    Import an inline calibration.
 
     Args:
         inline_file: Path to npz file containing the keys:
             'frames': 4D array containing the raw signal measurements. First two dims may be used to store the frames.
             'gray_values1', 'gray_values2': correspond to gray values of group A and B.
             'dark_frame': contains frame taken with laser blocked.
-        noise_analysis_iterations: Number of iterations to fit
         do_plot: Plot dark_frame noise statistics.
 
     Returns:
         gv0: Gray values for group A.
         gv1: Gray values for group B.
         measurements: 2D array containing the signal per gray value pair.
-        weights: Weights based on the noise analysis.
     """
     npz_data = np.load(inline_file)
     measurements = npz_data["frames"].mean(axis=(0, 1, 2)) - npz_data['dark_frame'].mean()
@@ -106,39 +101,7 @@ def import_inline_calibration(inline_file, do_plot=False, noise_analysis_iterati
     gv0 = npz_data['gray_values1'][0]
     gv1 = npz_data['gray_values2'][0]
 
-    alpha, beta, basevar = fit_quadratic(measurements, stds**2)
-
-    # Fit noise model
-    def noise_model(x, a, b, c):
-        return a * x ** 2 + b * x + c
-    weights = noise_model(measurements, 0, beta, basevar) ** (-0.5)
-    weights = weights / weights.mean()
-
     if do_plot:
-        # Plot noise model fit
-        plt.loglog(measurements.flatten(), stds.flatten() ** 2, '+', color='tab:blue', label='Measurement')
-        plt.loglog(measurements.flatten(), noise_model(measurements, alpha, beta, basevar).flatten(), '.k',
-                   label='Least Squares Fit')
-        plt.xlabel('Mean signal')
-        plt.ylabel('Signal variance')
-        plt.title('Noise model')
-        plt.legend()
-
-        # Plot weights vs mean signal
-        plt.figure()
-        plt.plot(measurements, weights, '.k')
-        plt.xlabel('Mean signal')
-        plt.ylabel('Weights')
-        plt.title('Weights')
-
-        # Plot weights vs gray values
-        plt.figure()
-        extent = (gv1.min() - 0.5, gv1.max() + 0.5, gv0.max() + 0.5, gv0.min() - 0.5)
-        plt.imshow(weights, extent=extent, interpolation='nearest')
-        plt.xlabel('$g_B$')
-        plt.ylabel('$g_A$')
-        plt.title('Weights')
-
         # Plot dark frame histogram
         plt.figure()
         plt.hist(npz_data['dark_frame'].flatten(), bins=range(-100, 100))
@@ -147,4 +110,4 @@ def import_inline_calibration(inline_file, do_plot=False, noise_analysis_iterati
         plt.ylabel('Counts')
         plt.pause(0.01)
 
-    return gv0, gv1, measurements, weights
+    return gv0, gv1, measurements, stds

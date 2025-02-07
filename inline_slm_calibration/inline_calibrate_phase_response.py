@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Internal
-from calibration_functions import learn_field, detrend
+from calibration_functions import learn_field
 from directories import data_folder
 from plot_utilities import plot_results_ground_truth
 from import_utilities import import_reference_calibrations, import_inline_calibration
@@ -22,6 +22,7 @@ ref_glob = data_folder.glob("tg_fringe/tg-fringe-slm-calibration-r*_noraw.npz") 
 plt.rcParams.update({'font.size': 14})
 settings = {
     "do_plot": False,
+    "do_weights_plot": False,
     "do_end_plot": True,
     "plot_per_its": 500,
     "nonlinearity": 2.0,
@@ -44,11 +45,11 @@ nonlin_all = [None] * len(inline_files)
 # Process files
 for n_f, filepath in enumerate(inline_files):
     # === Import and process inline measurement === #
-    gv0, gv1, measurements, weights = import_inline_calibration(filepath, settings['do_plot'])
+    gv0, gv1, measurements, stds = import_inline_calibration(filepath, settings['do_plot'])
 
     # Learn phase response
     nonlin, a, b, P_bg, phase, amplitude, amplitude_norm = learn_field(
-        gray_values0=gv0, gray_values1=gv1, measurements=measurements, weights=weights, **settings)
+        gray_values0=gv0, gray_values1=gv1, measurements=measurements, stds=stds, **settings)
 
     print(f"File {n_f}/{len(inline_files)} results:" \
           + f"a={a:.4f} (1.0), b={b:.4f}, P_bg={P_bg:.4f}, nonlin = {nonlin:.4f} ({settings['nonlinearity']})")
