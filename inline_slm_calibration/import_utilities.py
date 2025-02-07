@@ -1,5 +1,5 @@
 """
-Utilities for importing calibrations.
+Utilities for importing calibrations and analyzing noise.
 """
 # External (3rd party)
 import numpy as np
