@@ -40,11 +40,12 @@ def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False)
         ref_phase_all[n_f] = ref_phase * np.sign(ref_phase[-1] - ref_phase[0])  # Make dφ/dg mostly positive
 
     # Summarize as 1 curve with error bars
-    # Note: take median as it is robust against outliers. Use std to represent repeatability
+    # Notes: take median as it is robust against outliers. We do this because the laser is occasionally unstable when
+    # operated in CW mode.
     ref_gray = ref_gray_all[0]
     ref_amplitude = np.median(ref_amp_all, axis=0)
     ref_amplitude_norm = ref_amplitude / ref_amplitude.mean()
-    ref_amplitude_norm_std = np.std(ref_amp_all, axis=0)
+    ref_amplitude_norm_std = np.std(ref_amp_all, axis=0)        # represents repeatability
     ref_phase = np.median(ref_phase_all, axis=0)
     ref_phase -= ref_phase.mean()
     ref_phase_std = np.std(ref_phase_all, axis=0)

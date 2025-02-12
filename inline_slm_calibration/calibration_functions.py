@@ -23,6 +23,9 @@ def noise_model(x, a, b, c):
         a: Image variation and technical noise
         b: Shot noise σ²∝⟨x⟩
         c: Read-out noise
+
+    Returns:
+        Estimation of the variance
     """
     return a * x ** 2 + b * x + c
 
@@ -31,8 +34,8 @@ def compute_weights(measurements, stds, do_plot=False):
     """
     Compute weights
 
-    Compute weights by fitting a noise model. Compute weights based on shot-noise and read-out noise. Technical noise
-    is neglected.
+    Compute weights by fitting a noise model. Compute weights based on shot-noise and read-out noise, such that
+    w = 1 / σ². Technical noise is neglected.
 
     Args:
         measurements: Average signal per measurement
@@ -84,7 +87,6 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
         TODO
     """
     m = torch.tensor(measurements).t().contiguous().view(-1) # flatten("F")
-    w = torch.tensor(weights).t().contiguous().view(-1)
     m = m / m.abs().mean()
 
     # locate elements for which gv0 == gv1. These are measured twice and should be equal except for noise and photobleaching.
