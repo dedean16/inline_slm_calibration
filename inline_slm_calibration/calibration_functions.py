@@ -46,7 +46,7 @@ def compute_weights(measurements, stds, do_plot=False):
         weights: Weights based on the noise analysis.
     """
     a_n, b_n, c_n = fit_quadratic(measurements, stds**2)
-    w = 1 / noise_model(measurements, 0, b_n, c_n) ** 2
+    w = 1 / noise_model(measurements, 0, b_n, c_n)
     weights = w / w.mean()
 
     if do_plot:
@@ -115,7 +115,7 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
     for it in range(500):
         m_fit = photobleaching_model(factor, decay, received_energy)
         m_compensated = m / m_fit
-        loss = ((take_diag(m) - take_diag(m_fit)) * weights).pow(2).mean()
+        loss = (weights * (take_diag(m) - take_diag(m_fit)).pow(2)).mean()
 
         measurements_compensated = m_compensated.detach().numpy().reshape(measurements.shape, order='F')
 
