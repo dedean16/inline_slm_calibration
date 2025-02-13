@@ -1,5 +1,5 @@
 """
-Process and plot inline calibration measurements. Compare with reference method that uses a Twymann-Green interferometer
+Process and plot inline calibration measurements. Compare with conventional method that uses a Twymann-Green interferometer
 with Fourier fringe analysis. Before running this script, please ensure that data_folder (defined in directories.py)
 points to a valid folder and contains the measurement data files specified in the settings of this script.
 """
@@ -21,7 +21,7 @@ ref_glob = data_folder.glob("tg_fringe/tg-fringe-slm-calibration-r*_noraw.npz") 
 
 plt.rcParams.update({'font.size': 14})
 settings = {
-    "do_plot": False,
+    "do_plot": True,
     "do_weights_plot": False,
     "do_end_plot": True,
     "plot_per_its": 500,
@@ -48,11 +48,11 @@ for n_f, filepath in enumerate(inline_files):
     gv0, gv1, measurements, stds = import_inline_calibration(filepath, settings['do_plot'])
 
     # Learn phase response
-    nonlin, a, b, P_bg, phase, amplitude, amplitude_norm = learn_field(
+    nonlin, a, b, S_bg, phase, amplitude, amplitude_norm = learn_field(
         gray_values0=gv0, gray_values1=gv1, measurements=measurements, stds=stds, **settings)
 
     print(f"File {n_f}/{len(inline_files)} results:" \
-          + f"a={a:.4f} (1.0), b={b:.4f}, P_bg={P_bg:.4f}, nonlin = {nonlin:.4f} ({settings['nonlinearity']})")
+          + f"a={a:.4f}, b={b:.4f}, S_bg={S_bg:.4f}, nonlin = {nonlin:.4f} ({settings['nonlinearity']})")
 
     # Store results in array
     inline_gray_all[n_f] = gv0
@@ -75,8 +75,8 @@ n_max = np.argmax(inline_amplitude_norm_std_per_measurement)
 print(f'σ_A={inline_amplitude_norm_std_per_measurement[n_max]:.2g} for {inline_files[n_max]}')
 
 if settings['do_end_plot']:
-    # Note: during the last TG fringe measurement, gray values [0, 254] were measured (instead of [0, 255])
-    # -> leave out index 255 from plot
     plot_results_ground_truth(
+        # Note: during the last TG fringe measurement, gray values [0, 254] were measured (instead of [0, 255])
+        # -> leave out index 255 from plot
         inline_gray[:-1], inline_phase[:-1], inline_phase_std[:-1], inline_amplitude_norm[:-1], inline_amplitude_norm_std[:-1],
         ref_gray, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std)

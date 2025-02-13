@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 # Internal
-from plot_utilities import plot_field_response, plot_feedback_fit, plot_result_feedback_fit
+from plot_utilities import plot_field_response, plot_feedback_fit, plot_result_feedback_fit, colormap_adjust_piecewise
 from helper_functions import fit_quadratic
 
 
@@ -76,7 +76,8 @@ def compute_weights(measurements, stds, do_plot=False):
     return weights
 
 
-def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, do_plot=False):
+def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, do_plot=False,
+                  iterations=500):
     """
     Fit photobleaching
 
@@ -112,14 +113,14 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
     if do_plot:
         plt.figure(figsize=(15, 5))
 
-    for it in range(500):
+    for it in range(iterations):
         m_fit = photobleaching_model(factor, decay, received_energy)
         m_compensated = m / m_fit
         loss = (weights * (take_diag(m) - take_diag(m_fit)).pow(2)).mean()
 
         measurements_compensated = m_compensated.detach().numpy().reshape(measurements.shape, order='F')
 
-        if it % 10 == 0 and do_plot:
+        if (it % 20 == 0 or it == iterations-1) and do_plot:
             plt.clf()
             plt.subplot(1, 3, 1)
             plt.imshow(measurements_compensated, aspect='auto', interpolation='nearest')
@@ -212,6 +213,7 @@ def learn_field(
         do_end_plot: bool = False,
         plot_per_its: int = 10,
         learning_rate: float = 0.1,
+        cmap=colormap_adjust_piecewise('viridis'),
     ) -> tuple[float, float, float, float, nd, nd, nd]:
     """
     Learn the field response from dual gray value measurements.
@@ -246,7 +248,7 @@ def learn_field(
     decay, factor, received_energy = fit_bleaching(gray_values0, gray_values1, measurements, weights, do_plot)
 
     # Initial guess
-    E = torch.exp(2j * np.pi * torch.rand(256))                                     # Field response
+    E = torch.exp(2j * np.pi * torch.rand(gray_values0.size))                       # Field response
     E.requires_grad_(True)
     a = torch.tensor(1.0, requires_grad=True, dtype=torch.complex64)           # Group A complex pre-factor
     b = torch.tensor(1.0, requires_grad=True, dtype=torch.complex64)           # Group B complex pre-factor
@@ -280,7 +282,7 @@ def learn_field(
                 plt.clf()
             plt.subplot(1, 3, 1)
             plot_field_response(E)
-            plot_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1)
+            plot_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1, cmap=cmap)
             plt.title(f"feedback loss: {loss:.3g}\na: {a:.3g}, b: {b:.3g}, S_bg: {S_bg:.3g}")
             plt.pause(0.01)
 
@@ -296,7 +298,8 @@ def learn_field(
     if do_plot and do_end_plot:
         plt.figure(figsize=(14, 4.3))
         plt.subplots_adjust(left=0.05, right=0.98, bottom=0.15)
-        plot_result_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1, weights)
+        plot_result_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1, weights, cmap=cmap)
+        plt.pause(0.1)
 
     return nonlinearity.item(), a.item(), b.item(), S_bg.item(), phase, amplitude, amplitude_norm
 

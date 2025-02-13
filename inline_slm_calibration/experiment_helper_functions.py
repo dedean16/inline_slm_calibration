@@ -201,8 +201,8 @@ def converge_parking_spot(shutter, image_reader: Processor, scanner: ScanningMic
     return (left, top, scanner.width, scanner.height), imgs
 
 
-def inline_calibrate(feedback: Detector, slm: SLM | MockSLM, n_x=4, n_y=4, gray_values1=None, gray_values2=None,
-                     progress_bar=None, progress_bar_suffix: str = ''):
+def inline_calibrate(feedback: Detector, slm: SLM | MockSLM, n_x=4, n_y=4, gray_values1=None,
+                     gray_values2=None, progress_bar=None, progress_bar_suffix: str = ''):
     if gray_values1 is None:
         gray_values1 = np.arange(0, 255)
 

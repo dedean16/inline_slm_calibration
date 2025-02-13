@@ -22,7 +22,8 @@ def colormap_adjust_piecewise(cmap_name: str, x_points=None, y_points=None):
 
 
 def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amplitude_norm_std,
-                              ref_gray_values, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std):
+                              ref_gray_values, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std,
+                              reflabel='TG'):
     lightC0 = '#a8d3f0'
     lightC1 = '#ffc899'
 
@@ -31,7 +32,7 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     plt.subplots_adjust(left=0.1, right=0.95, hspace=0.35, wspace=0.35, top=0.92, bottom=0.12)
 
     plt.subplot(1, 2, 1)
-    plt.errorbar(ref_gray_values, ref_phase, yerr=ref_phase_std, linestyle='dashed', color='C0', ecolor=lightC0, label='TG')
+    plt.errorbar(ref_gray_values, ref_phase, yerr=ref_phase_std, linestyle='dashed', color='C0', ecolor=lightC0, label=reflabel)
     plt.errorbar(gray_values, phase, yerr=phase_std, color='C1', ecolor=lightC1, label='Inline (ours)')
     plt.xlabel('Gray value')
     plt.ylabel('Phase (rad)')
@@ -39,7 +40,7 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     plt.legend()
 
     plt.subplot(1, 2, 2)
-    plt.errorbar(ref_gray_values, ref_amplitude_norm, yerr=ref_amplitude_norm_std, linestyle='dashed', fmt='', ecolor=lightC0, label='TG')
+    plt.errorbar(ref_gray_values, ref_amplitude_norm, yerr=ref_amplitude_norm_std, linestyle='dashed', fmt='', ecolor=lightC0, label=reflabel)
     plt.plot(ref_gray_values, ref_amplitude_norm, linestyle='dashed', color='C0', zorder=3)
     plt.errorbar(gray_values, amplitude_norm, yerr=amplitude_norm_std, color='C1', ecolor=lightC1, label='Inline (ours)')
     plt.xlabel('Gray value')
@@ -54,7 +55,7 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     E_norm = amplitude_norm * np.exp(1.0j * phase)
     ref_amplitude_norm = ref_amplitude_norm / ref_amplitude_norm.mean()
     E_ref_norm = ref_amplitude_norm * np.exp(1.0j * ref_phase)
-    plt.plot(E_ref_norm.real, E_ref_norm.imag, label="TG")
+    plt.plot(E_ref_norm.real, E_ref_norm.imag, label=reflabel)
     plt.plot(E_norm.real, E_norm.imag, label="Inline (ours)")
     plt.legend()
 
@@ -70,12 +71,12 @@ def plot_field_response(field_response_per_gv):
     plt.title("Predicted field response")
 
 
-def plot_feedback_fit(feedback_measurements, feedback, gray_values0, gray_values1):
+def plot_feedback_fit(feedback_measurements, feedback, gray_values0, gray_values1,
+                      cmap=colormap_adjust_piecewise('viridis')):
     plt.subplot(1, 3, 2)
     extent = (gray_values1.min()-0.5, gray_values1.max()+0.5, gray_values0.max()+0.5, gray_values0.min()-0.5)
     vmin = torch.minimum(feedback_measurements.min(), feedback.min())
     vmax = torch.maximum(feedback_measurements.max(), feedback.max())
-    cmap = colormap_adjust_piecewise('viridis')
     plt.imshow(feedback_measurements.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax, cmap=cmap)
     plt.title("Measured feedback")
     plt.colorbar()
@@ -86,13 +87,13 @@ def plot_feedback_fit(feedback_measurements, feedback, gray_values0, gray_values
     plt.colorbar()
 
 
-def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray_values1, weights):
+def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray_values1, weights,
+                             cmap=colormap_adjust_piecewise('viridis')):
     extent = (gray_values1.min()-0.5, gray_values1.max()+0.5, gray_values0.max()+0.5, gray_values0.min()-0.5)
     vmin = torch.minimum(feedback_measurements.min(), feedback.min())
     vmax = torch.maximum(feedback_measurements.max(), feedback.max())
 
     plt.subplot(1, 3, 1)
-    cmap = colormap_adjust_piecewise('viridis')
     plt.imshow(feedback_measurements.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax, cmap=cmap)
     plt.title("a. Measured signal")
     plt.xlabel('$g_B$')

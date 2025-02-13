@@ -75,7 +75,7 @@ def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False)
         plt.xlabel('Gray value')
         plt.ylabel('Amp')
         plt.title('TG fringe calibration, unwrapped\ncompensated for sign and offset')
-        plt.show()
+        plt.pause(0.1)
 
     return ref_gray, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std
 
