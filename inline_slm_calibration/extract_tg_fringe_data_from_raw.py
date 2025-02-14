@@ -1,3 +1,7 @@
+"""
+The raw data for the Twymann-Green interference measurements is huge. This script reads and recreates the files without
+the raw frames.
+"""
 import glob
 import numpy as np
 import os

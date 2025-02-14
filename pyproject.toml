@@ -6,7 +6,7 @@ authors = ["Daniel Cox <danielcox16@hotmail.com>"]
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = "~3.11"
+python = ">=3.9,<4.0"
 torch = "^2.5"
 torchvision = ">0.1"
 matplotlib = "^3.8.3"
@@ -17,6 +17,7 @@ h5py = "~3.11.0"
 gitpython = "^3.1.43"
 zaber-motion = "^5.2.1"
 pyserial = "^3.5"
+astropy = ">=5.1.0"
 
 [tool.black]
 line-length = 120

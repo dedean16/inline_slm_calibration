@@ -96,7 +96,7 @@ def import_inline_calibration(inline_file, do_plot=False) -> tuple[nd, nd, nd, n
         gv1: Gray values for group B.
         measurements: 2D array containing the signal per gray value pair.
     """
-    npz_data = np.load(inline_file)
+    npz_data = np.load(inline_file)     # Note: dimension 0 is unused
     measurements = npz_data["frames"].mean(axis=(0, 1, 2)) - npz_data['dark_frame'].mean()
     stds = npz_data["frames"].std(axis=(0, 1, 2))
     gv0 = npz_data['gray_values1'][0]
