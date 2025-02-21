@@ -21,6 +21,16 @@ def colormap_adjust_piecewise(cmap_name: str, x_points=None, y_points=None):
     return ListedColormap(new_colors, name=f'{cmap_name}_piecewise{x_points},{y_points}')
 
 
+def remove_bias_field(E):
+    """
+    Detect and remove a bias in a phase-only field.
+    """
+    Er_bias = (E.real.max() + E.real.min()) / 2
+    Ei_bias = (E.imag.max() + E.imag.min()) / 2
+    E_nobias = E - Er_bias - 1j*Ei_bias
+    return E_nobias
+
+
 def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amplitude_norm_std,
                               ref_gray_values, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std,
                               reflabel='TG'):
@@ -49,12 +59,6 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     plt.title('b. Normalized amplitude response')
     plt.legend()
 
-    plt.figure()
-    plt.plot(phase - ref_phase)
-    plt.xlabel('Gray value')
-    plt.ylabel('Phase difference (rad)')
-    plt.title('Phase difference')
-
     # Plot field response in complex plane
     plt.figure()
     amplitude_norm = amplitude_norm / amplitude_norm.mean()
@@ -67,6 +71,22 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     plt.xlabel('Re(E)')
     plt.ylabel('Im(E)')
     plt.legend()
+
+    # Phase difference
+    plt.figure()
+    plt.plot(phase - ref_phase)
+    plt.xlabel('Gray value')
+    plt.ylabel('Phase difference (rad)')
+    plt.title('Phase difference')
+
+    # Phase difference no bias
+    phase_nobias = np.angle(remove_bias_field(E_norm))
+    ref_phase_nobias = np.angle(remove_bias_field(E_ref_norm))
+    plt.figure()
+    plt.plot(np.unwrap(phase_nobias - ref_phase_nobias))
+    plt.xlabel('Gray value')
+    plt.ylabel('Phase difference (rad)')
+    plt.title('Phase difference (bias removed)')
 
     plt.show()
 
