@@ -6,18 +6,18 @@ authors = ["Daniel Cox <danielcox16@hotmail.com>"]
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0"
-torch = "^2.5"
+python = ">=3.10,<4.0"
+torch = "^2.6"
 torchvision = ">0.1"
-matplotlib = "^3.8.3"
-numpy = "^1.26.4"
+matplotlib = "^3.10"
+numpy = ">=1.25.2"
 openwfs = { git = "https://github.com/IvoVellekoop/openwfs", rev = "fe1dea7d99cf980bc48ce99f0801f17d6822197a", extras = ['all'] }
 tqdm = "^4.66.2"
 h5py = "~3.11.0"
 gitpython = "^3.1.43"
 zaber-motion = "^5.2.1"
 pyserial = "^3.5"
-astropy = ">=5.1.0"
+astropy = ">=6.0"
 
 [tool.black]
 line-length = 120
