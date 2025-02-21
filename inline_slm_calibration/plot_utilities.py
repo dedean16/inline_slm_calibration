@@ -49,6 +49,12 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     plt.title('b. Normalized amplitude response')
     plt.legend()
 
+    plt.figure()
+    plt.plot(phase - ref_phase)
+    plt.xlabel('Gray value')
+    plt.ylabel('Phase difference (rad)')
+    plt.title('Phase difference')
+
     # Plot field response in complex plane
     plt.figure()
     amplitude_norm = amplitude_norm / amplitude_norm.mean()
@@ -57,6 +63,9 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     E_ref_norm = ref_amplitude_norm * np.exp(1.0j * ref_phase)
     plt.plot(E_ref_norm.real, E_ref_norm.imag, label=reflabel)
     plt.plot(E_norm.real, E_norm.imag, label="Inline (ours)")
+    plt.title('Complex plane')
+    plt.xlabel('Re(E)')
+    plt.ylabel('Im(E)')
     plt.legend()
 
     plt.show()
