@@ -46,8 +46,7 @@ def compute_weights(measurements, stds, do_plot=False):
         weights: Weights based on the noise analysis.
     """
     a_n, b_n, c_n = fit_quadratic(measurements, stds**2)
-    w = 1 / noise_model(measurements, 0, b_n, c_n)
-    weights = w / w.mean()
+    weights = 1 / noise_model(measurements, 0, b_n, c_n)
 
     if do_plot:
         # Plot noise model fit
