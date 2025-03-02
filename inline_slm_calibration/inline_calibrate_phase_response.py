@@ -73,6 +73,7 @@ inline_phase_std = np.std(inline_phase_all, axis=0)
 print([f'{amp_std:.2g}' for amp_std in inline_amplitude_norm_std_per_measurement])
 n_max = np.argmax(inline_amplitude_norm_std_per_measurement)
 print(f'σ_A={inline_amplitude_norm_std_per_measurement[n_max]:.2g} for {inline_files[n_max]}')
+print(f'avg σ_φ={np.mean(inline_phase_std):.3g} rad')
 
 if settings['do_end_plot']:
     plot_results_ground_truth(
