@@ -21,7 +21,7 @@ ref_glob = data_folder.glob("tg_fringe/tg-fringe-slm-calibration-r*_noraw.npz") 
 
 plt.rcParams.update({'font.size': 14})
 settings = {
-    "do_plot": True,
+    "do_plot": True,            # Set to False for best performance
     "do_weights_plot": False,
     "do_end_plot": True,
     "plot_per_its": 500,
@@ -44,6 +44,9 @@ nonlin_all = [None] * len(inline_files)
 
 # Process files
 for n_f, filepath in enumerate(inline_files):
+    if settings['do_plot']:
+        print('Note: Live plotting is on. For the best performance, set settings["do_plot"] to False.')
+
     # === Import and process inline measurement === #
     gv0, gv1, measurements, stds = import_inline_calibration(filepath, settings['do_plot'])
 

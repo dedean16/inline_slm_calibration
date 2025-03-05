@@ -28,6 +28,7 @@ which should plot the calibration curves. Plot settings and optimizer settings c
 
 Before running any script, please ensure the variables defined in ``inline_slm_calibration/directories.py``
 point to valid directories. Additionally, for the scripts that import/export data, please ensure that (sub)directories
-and file paths in the settings (near the top of each script) are valid.
+and file paths in the settings (near the top of each script) are valid. By default, the a live plot of the fitting
+process is shown. For the best performance, it is recommended to set ``settings["do_plot"]`` to ``False``.
 
 A demonstration on synthetic data can be run with ``inline_slm_calibration/inline_calibrate_phase_response_synth.py``.
