@@ -159,4 +159,4 @@ def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray
     # Shift the subplot right and reduce its width slightly
     ax.set_position([pos.x0 + 0.05, pos.y0, pos.width - 0.05, pos.height])
 
-    plt.show()
+    plt.pause(1)

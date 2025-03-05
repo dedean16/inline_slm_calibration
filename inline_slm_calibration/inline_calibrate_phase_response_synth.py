@@ -106,7 +106,7 @@ inline_phase = np.median(inline_phase_all, axis=0)
 inline_phase -= inline_phase.mean()
 inline_phase_std = np.std(inline_phase_all, axis=0)
 
-ref_phase = phase_gt - phase_gt.mean()
+ref_phase = (phase_gt - phase_gt.mean()).numpy()
 
 if settings['do_end_plot']:
     plot_results_ground_truth(
