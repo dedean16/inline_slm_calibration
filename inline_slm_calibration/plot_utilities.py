@@ -122,24 +122,41 @@ def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray
     vmin = torch.minimum(feedback_measurements.min(), feedback.min())
     vmax = torch.maximum(feedback_measurements.max(), feedback.max())
 
-    plt.subplot(1, 3, 1)
+    plt.subplot(1, 4, 1)
     plt.imshow(feedback_measurements.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax, cmap=cmap)
     plt.title("a. Measured signal")
     plt.xlabel('$g_B$')
     plt.ylabel('$g_A$')
     plt.colorbar()
 
-    plt.subplot(1, 3, 2)
+    plt.subplot(1, 4, 2)
     plt.imshow(feedback.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax, cmap=cmap)
     plt.title("b. Fit signal")
     plt.xlabel('$g_B$')
     plt.ylabel('$g_A$')
     plt.colorbar()
 
-    weighted_residual = ((feedback_measurements- feedback) * weights).detach()
-    plt.subplot(1, 3, 3)
+    weighted_residual = ((feedback_measurements - feedback) * weights).detach()
+    plt.subplot(1, 4, 3)
     plt.imshow(weighted_residual, extent=extent, interpolation="nearest", cmap='magma')
     plt.title("c. Weighted residual")
     plt.xlabel('$g_B$')
     plt.ylabel('$g_A$')
     plt.colorbar()
+
+    wr_std = weighted_residual.std()
+    plt.subplot(1, 4, 4)
+    plt.hist(weighted_residual.flatten(), bins=31)
+    plt.title("d. Histogram")
+    plt.xlabel('Weighted residuals')
+    plt.ylabel('Counts')
+    plt.xticks([-wr_std, 0, wr_std], ['$-\\sigma$', '0', '$\\sigma$'])
+    plt.xlim([-3*wr_std, 3*wr_std])
+
+    # Adjust the position of the current axes to add left margin
+    ax = plt.gca()
+    pos = ax.get_position()
+    # Shift the subplot right and reduce its width slightly
+    ax.set_position([pos.x0 + 0.05, pos.y0, pos.width - 0.05, pos.height])
+
+    plt.show()
