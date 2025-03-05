@@ -43,7 +43,7 @@ def compute_weights(measurements, stds, do_plot=False):
         do_plot: Plot fitting results
 
     Returns:
-        weights: Weights based on the noise analysis.
+        weights: Weights based on the variance determined with noise analysis.
     """
     a_n, b_n, c_n = fit_quadratic(measurements, stds**2)
     weights = 1 / noise_model(measurements, 0, b_n, c_n)
@@ -115,7 +115,7 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
     for it in range(iterations):
         m_fit = photobleaching_model(factor, decay, received_energy)
         m_compensated = m / m_fit
-        loss = (weights * (take_diag(m) - take_diag(m_fit)).pow(2)).mean()
+        loss = (take_diag(weights) * ((take_diag(m) - take_diag(m_fit)).pow(2))).mean()
 
         measurements_compensated = m_compensated.detach().numpy().reshape(measurements.shape, order='F')
 
@@ -271,7 +271,7 @@ def learn_field(
     for it in range(iterations):
         predicted_signal = signal_model(
             gray_values0, gray_values1, E, a, b, S_bg, nonlinearity, decay, factor, received_energy)
-        loss = ((measurements - predicted_signal) * weights).pow(2).mean()
+        loss = (weights * (measurements - predicted_signal).pow(2)).mean()
 
         # Gradient descent step
         loss.backward()
