@@ -148,12 +148,17 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
         plt.imshow(ff)
         plt.title('Selected measurements\nwith gray values swapped')
 
-        plt.figure()
-        plt.plot(m)
-        plt.title('Measurements in sequence')
+        plt.figure(figsize=(7, 3.5))
+        plt.subplots_adjust(bottom=0.15)
+        indices = np.asarray(range(m.numel()))
+        plt.plot(indices, m, label='All measurements')
+        plt.plot(take_diag(indices), take_diag(m), 'or', label='$g_A=g_B$')
+        plt.plot(take_diag(indices), take_diag(m_fit.detach()), '--k', label='Fit')
+        plt.title('Photobleaching')
         plt.ylabel('Signal')
-        plt.xlabel('Index')
-        plt.pause(0.01)
+        plt.xlabel('Time (measurement index)')
+        plt.legend()
+        plt.pause(0.1)
 
     return decay, factor, received_energy
 
@@ -295,7 +300,7 @@ def learn_field(
     phase -= phase.mean()
 
     if do_plot and do_end_plot:
-        plt.figure(figsize=(14, 4.3))
+        plt.figure(figsize=(17, 4.3))
         plt.subplots_adjust(left=0.05, right=0.98, bottom=0.15)
         plot_result_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1, weights, cmap=cmap)
         plt.pause(0.1)
