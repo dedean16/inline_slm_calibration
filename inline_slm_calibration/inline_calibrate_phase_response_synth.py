@@ -27,7 +27,7 @@ settings = {
     "plot_per_its": 500,
     "nonlinearity": 2.0,
     "learning_rate": 0.3,
-    "iterations": 10000,
+    "iterations": 20000,
     "cmap": 'viridis',
 }
 
@@ -53,7 +53,8 @@ S_bg_gt = 1.0
 nonlin_gt = 2.0
 
 # Photobleaching
-decay_gt = 5e-4
+# decay_gt = 5e-4
+decay_gt = 1e-3
 factor_gt = 1.0
 
 # Noise
@@ -66,10 +67,9 @@ n_samples = 100
 m_gt_nobleach = signal_model(gray_values0=gv0, gray_values1=gv1, E=E_gt, a=a_gt, b=b_gt, S_bg=S_bg_gt,
                     nonlinearity=nonlin_gt, decay=0, factor=factor_gt,
                     received_energy=torch.ones(numel))
-_, _, received_energy = fit_bleaching(gv0, gv1, m_gt_nobleach, weights=torch.ones_like(m_gt_nobleach))     # Approximate bleaching
+#### TODO
 
-m_gt = signal_model(gray_values0=gv0, gray_values1=gv1, E=E_gt, a=a_gt, b=b_gt, S_bg=S_bg_gt,
-                    nonlinearity=nonlin_gt, decay=decay_gt, factor=factor_gt, received_energy=received_energy)
+m_gt = m_gt_nobleach.clone().detach()
 
 
 # Initialize arrays

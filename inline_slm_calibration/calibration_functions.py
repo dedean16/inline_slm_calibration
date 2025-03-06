@@ -105,27 +105,28 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
     Returns:
         TODO
     """
-    m = measurements.t().contiguous().view(-1) # flatten("F")
-    m = m / m.abs().mean()
-    w = ensure_tensor(weights)
+    S_m = measurements.clone().t().contiguous().view(-1) # flatten("F")
+    w = ensure_tensor(weights).view(-1)
 
     # locate elements for which gv0 == gv1. These are measured twice and should be equal except for noise and photobleaching.
-    gv0 = np.asarray(gray_value0)
-    sym_selection = [np.nonzero(gv0 == gv1)[0][0].item() for gv1 in gray_value1]
+    gv0 = torch.tensor(gray_value0).view(1, -1)
+    gv1 = torch.tensor(gray_value1).view(-1, 1)
+    i_all = torch.arange(0, S_m.numel())
+    max_mask = (gv0 == gv1).view(-1)  # Mask of maxima due to constructive interference: where g_A == g_B
 
-    learning_rate = 0.1
+    learning_rate = 5e-4
 
     # Initial values
-    factor = ensure_tensor(0.1 * (m.max() - m.min())).requires_grad_(True)
-    decay = torch.tensor(0.1 / len(m), dtype=torch.float32, requires_grad=True)
-    received_energy = np.cumsum(torch.maximum(m,torch.tensor(0.0)))
-
-    def take_diag(M):
-        return M.reshape((measurements.shape[1], measurements.shape[0]))[:, sym_selection].diagonal()
+    intensity = (torch.rand_like(S_m, dtype=torch.float32)).requires_grad_(True)
+    N = torch.tensor(nonlinearity, dtype=torch.float32, requires_grad=False)
+    # efficiency = S_m.std().detach().clone().requires_grad_(True)
+    efficiency = S_m[0].clone().requires_grad_(False)
+    decay = torch.tensor(1.0, dtype=torch.float32, requires_grad=True)
+    bleach_accel = N.detach().clone().requires_grad_(True)
 
     params = [
-        {"params": [factor], "lr": learning_rate},
-        {"params": [decay], "lr": 10*learning_rate / len(m)}
+        {"params": [intensity, N, efficiency, bleach_accel], "lr": learning_rate},
+        {"params": [decay], "lr": 100 * learning_rate},
     ]
     optimizer = torch.optim.Adam(params, lr=learning_rate, amsgrad=True)
 
@@ -133,47 +134,43 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
         plt.figure(figsize=(15, 5))
 
     for it in range(iterations):
-        m_fit = photobleaching_model(factor, decay, received_energy)
-        m_compensated = m / m_fit
-        loss_bleaching = (take_diag(w) * ((take_diag(m) - take_diag(m_fit)).pow(2))).mean()
+        S_fit = photobleaching_model(intensity, nonlinearity, efficiency, decay, bleach_accel)
+        S_fit_atmax = photobleaching_model(intensity, 0, efficiency, decay, bleach_accel)
+        # loss = ((w[~max_mask] * (S_fit[~max_mask] - S_m[~max_mask]).pow(2)).sum()
+        #     + (10 * w[max_mask] * (S_fit_atmax[max_mask] - S_m[max_mask]).pow(2)).sum()) / S_m.numel()
+        loss_pb = (w * ((S_fit - S_m).pow(2))).mean() + (w*max_mask * (S_fit - S_m).pow(2)).sum() / max_mask.sum() \
+                + 100 * intensity[max_mask].std()
 
-        measurements_compensated = m_compensated.detach().numpy().reshape(measurements.shape, order='F')
-
-        if (it % 25 == 0 or it == iterations-1) and do_bleach_plot:
+        if (it % 50 == 0 or it == iterations-1) and do_plot:
             plt.clf()
-            plt.subplot(1, 3, 1)
-            plt.imshow(measurements_compensated, aspect='auto', interpolation='nearest')
-            plt.title(f'Scale={factor.detach():.3f}, decay={decay.detach():.3g}')
+            plt.subplot(1, 2, 1)
+            plt.plot(i_all, S_m, label='All measurements')
+            plt.plot(i_all, S_fit.detach(), '--k', label='Signal fit')
+            plt.plot(i_all[max_mask], S_m[max_mask], 'o', label='$g_A=g_B$')
+            plt.plot(i_all, S_fit_atmax.detach(), '--r', label='Bleach fit')
+            plt.title(f'Photobleaching, $\\beta$={decay.detach().item():.3g}, $\\eta$={efficiency.detach().item():.3g}')
+            plt.ylabel('Signal')
+            plt.xlabel('Time (measurement index)')
+            plt.legend()
 
-            plt.subplot(1, 3, 2)
-            plt.plot(take_diag(m).detach())
-            plt.plot(take_diag(m_fit).detach())
-            plt.ylim((0, 10))
-            plt.title(f'Fit diagonal entries (gv0==gv1)')
+            plt.subplot(1, 2, 2)
+            plt.plot(i_all, intensity.detach())
+            plt.xlabel('Time (measurement index)')
+            plt.ylabel('I(t)')
 
-            plt.subplot(1, 3, 3)
-            plt.plot(take_diag(m_compensated).detach())
-            plt.ylim((0, 10))
-            plt.title(f'Compensated diagonal entries (gv0==gv1), {it}')
-            plt.pause(0.01)
+            plt.pause(0.1)
 
-        loss_bleaching.backward()
+        loss_pb.backward()
         optimizer.step()
         optimizer.zero_grad()
 
-    ff = measurements_compensated[sym_selection, :]
-
-    if do_bleach_plot:
-        plt.figure()
-        plt.imshow(ff)
-        plt.title('Selected measurements\nwith gray values swapped')
-
-        plt.figure(figsize=(7, 5))
+    if do_plot:
+        plt.figure(figsize=(7, 3.5))
         plt.subplots_adjust(bottom=0.15)
-        indices = np.asarray(range(m.numel()))
-        plt.plot(indices, m, label='All measurements')
-        plt.plot(take_diag(indices), take_diag(m), 'or', label='$g_A=g_B$')
-        plt.plot(indices, m_fit.detach(), '--k', label='Fit')
+        plt.plot(i_all, S_m, label='All measurements')
+        plt.plot(i_all, S_fit.detach(), '--k', label='Signal fit')
+        plt.plot(i_all[max_mask], S_m[max_mask], 'o', label='$g_A=g_B$')
+        plt.plot(i_all[max_mask], S_fit[max_mask].detach(), '--r', label='Bleach fit')
         plt.title('Photobleaching')
         plt.ylabel('Signal')
         plt.xlabel('Time (measurement index)')
@@ -183,18 +180,26 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
     return decay, factor, received_energy
 
 
-def photobleaching_model(factor, decay, received_energy):
+def photobleaching_model(intensity: tt, nonlinearity: tt, efficiency: tt, decay: tt, bleach_accel: tt) -> tt:
     """
     Photobleaching model
 
-    The signal decays exponentially with the previously received energy: αᵢ=α₀⋅exp(-D⋅∑S).
+    The signal decays exponentially with the previously received energy:
+    S(t) = (I(t))^N ⋅ η₀ ⋅ exp(-β ∫ (I(t))^α dt)
+
+    We define I(t) such that (I(t))^N == 1 when g_A(t) == g_B(t).
 
     Args:
-        factor: α₀
-        decay: D
-        received_energy: ∑S
+        intensity: I(t)
+        nonlinearity: N
+        efficiency: η₀
+        decay: β
+        bleach_accel: α
+
+    Returns:
+        The estimated signal S(t)
     """
-    return factor * torch.exp(-decay * received_energy)
+    return intensity**nonlinearity * efficiency * torch.exp(-decay * torch.cumsum(intensity**bleach_accel, dim=0) / intensity.numel())
 
 
 def signal_model(gray_values0, gray_values1, E: tt, a: tt, b: tt, S_bg: tt, nonlinearity: tt, decay: tt,
@@ -221,7 +226,9 @@ def signal_model(gray_values0, gray_values1, E: tt, a: tt, b: tt, S_bg: tt, nonl
     E0 = E[gray_values0].view(-1, 1)
     E1 = E[gray_values1].view(1, -1)
     I_excite = (a * E0 + b * E1).abs().pow(2)
-    bleach_factor = photobleaching_model(factor, decay, received_energy).reshape((len(gray_values1), len(gray_values0))).T
+    bleach_factor = photobleaching_model(torch.ones_like(I_excite), nonlinearity, efficiency=1.0, decay=decay, bleach_accel=nonlinearity).reshape((len(gray_values1), len(gray_values0))).T
+    ## TODO fix values
+    # bleach_factor = photobleaching_model(1.0, nonlinearity, efficiency, decay, bleach_accel).reshape((len(gray_values1), len(gray_values0))).T
     return I_excite.pow(nonlinearity) * bleach_factor + S_bg
 
 
