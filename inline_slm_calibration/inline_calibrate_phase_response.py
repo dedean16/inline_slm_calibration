@@ -55,8 +55,8 @@ for n_f, filepath in enumerate(inline_files):
     nonlin, a, b, S_bg, phase, amplitude, amplitude_norm = learn_field(
         gray_values0=gv0, gray_values1=gv1, measurements=measurements, stds=stds, **settings)
 
-    print(f"File {n_f}/{len(inline_files)} results:" \
-          + f"a={a:.4f}, b={b:.4f}, S_bg={S_bg:.4f}, nonlin = {nonlin:.4f} ({settings['nonlinearity']})")
+    print(f"\nFile {n_f}/{len(inline_files)} results:" \
+          + f"a={a:.4f}, b={b:.4f}, S_bg={S_bg:.4f}, nonlin = {nonlin:.4f} ({settings['nonlinearity']})\n")
 
     # Store results in array
     inline_gray_all[n_f] = gv0
