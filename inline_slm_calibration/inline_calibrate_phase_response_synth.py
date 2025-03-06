@@ -63,7 +63,7 @@ n_samples = 10
 m_gt_nobleach = signal_model(gray_values0=gv0, gray_values1=gv1, E=E_gt, a=a_gt, b=b_gt, S_bg=S_bg_gt,
                     nonlinearity=nonlin_gt, decay=0, factor=factor_gt,
                     received_energy=torch.ones(numel))
-_, _, received_energy = fit_bleaching(gv0, gv1, m_gt_nobleach, weights=1.0)     # Approximate bleaching
+_, _, received_energy = fit_bleaching(gv0, gv1, m_gt_nobleach, weights=torch.ones_like(m_gt_nobleach))     # Approximate bleaching
 
 m_gt = signal_model(gray_values0=gv0, gray_values1=gv1, E=E_gt, a=a_gt, b=b_gt, S_bg=S_bg_gt,
                     nonlinearity=nonlin_gt, decay=decay_gt, factor=factor_gt, received_energy=received_energy)
@@ -107,6 +107,8 @@ inline_phase -= inline_phase.mean()
 inline_phase_std = np.std(inline_phase_all, axis=0)
 
 ref_phase = (phase_gt - phase_gt.mean()).numpy()
+
+print(f'avg σ_φ={np.mean(inline_phase_std):.3g} rad')
 
 if settings['do_end_plot']:
     plot_results_ground_truth(

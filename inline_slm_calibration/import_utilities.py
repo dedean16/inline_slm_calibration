@@ -27,6 +27,7 @@ def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False)
     ref_amp_all = [None] * len(ref_files)
 
     # Check
+    print('Importing conventional measurements...')
     if len(ref_files) < 2:
         raise ValueError(f'We found {len(ref_files)} files matching the ref_glob. At least 2 files are required. ' +
                          f'Is the data path correctly configured in directories.py?')
@@ -97,6 +98,7 @@ def import_inline_calibration(inline_file, do_plot=False) -> tuple[nd, nd, nd, n
         gv1: Gray values for group B.
         measurements: 2D array containing the signal per gray value pair.
     """
+    print('Importing new inline measurements...')
     npz_data = np.load(inline_file)     # Note: dimension 0 is unused
     measurements = npz_data["frames"].mean(axis=(0, 1, 2)) - npz_data['dark_frame'].mean()
     stds = npz_data["frames"].std(axis=(0, 1, 2))

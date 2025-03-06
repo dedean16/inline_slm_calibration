@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 # Internal
 from plot_utilities import plot_field_response, plot_feedback_fit, plot_result_feedback_fit, colormap_adjust_piecewise
-from helper_functions import fit_quadratic
+from helper_functions import fit_quadratic, ensure_tensor
 
 
 # Fit noise model
@@ -86,8 +86,9 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
     Returns:
         TODO
     """
-    m = torch.tensor(measurements).t().contiguous().view(-1) # flatten("F")
+    m = measurements.t().contiguous().view(-1) # flatten("F")
     m = m / m.abs().mean()
+    w = ensure_tensor(weights)
 
     # locate elements for which gv0 == gv1. These are measured twice and should be equal except for noise and photobleaching.
     gv0 = np.asarray(gray_value0)
@@ -96,7 +97,7 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
     learning_rate = 0.1
 
     # Initial values
-    factor = torch.tensor(0.1 * (m.max() - m.min()), dtype=torch.float32, requires_grad=True)
+    factor = ensure_tensor(0.1 * (m.max() - m.min())).requires_grad_(True)
     decay = torch.tensor(0.1 / len(m), dtype=torch.float32, requires_grad=True)
     received_energy = np.cumsum(torch.maximum(m,torch.tensor(0.0)))
 
@@ -115,7 +116,7 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
     for it in range(iterations):
         m_fit = photobleaching_model(factor, decay, received_energy)
         m_compensated = m / m_fit
-        loss = (take_diag(weights) * ((take_diag(m) - take_diag(m_fit)).pow(2))).mean()
+        loss = (take_diag(w) * ((take_diag(m) - take_diag(m_fit)).pow(2))).mean()
 
         measurements_compensated = m_compensated.detach().numpy().reshape(measurements.shape, order='F')
 
@@ -245,8 +246,7 @@ def learn_field(
     measurements = torch.tensor(measurements, dtype=torch.float32)
     measurements = measurements / measurements.std()                                # Normalize by std
 
-    weights_np = compute_weights(measurements, stds, do_weights_plot)
-    weights = torch.tensor(weights_np, dtype=torch.float32)
+    weights = compute_weights(measurements, stds, do_weights_plot)
 
     # Fit signal decay due to photobleaching
     decay, factor, received_energy = fit_bleaching(gray_values0, gray_values1, measurements, weights, do_plot)

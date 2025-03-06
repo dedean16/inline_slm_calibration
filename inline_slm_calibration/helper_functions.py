@@ -2,6 +2,7 @@
 Various helper functions.
 """
 # External (3rd party)
+import torch
 import numpy as np
 import h5py
 import git
@@ -89,3 +90,13 @@ def fit_quadratic(x, y):
     coefficients, _, _, _ = np.linalg.lstsq(X, yf, rcond=None)
     a, b, c = coefficients
     return a, b, c
+
+
+def ensure_tensor(x, dtype=torch.float32):
+    """
+    If input is not a torch Tensor, convert to torch Tensor of the (optionally) given datatype.
+    """
+    if isinstance(x, torch.Tensor):
+        return x
+
+    return torch.tensor(x, dtype=dtype)
