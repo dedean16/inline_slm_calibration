@@ -61,12 +61,12 @@ n_samples = 10
 
 # === Create synthetic measurement === #
 m_gt_nobleach = signal_model(gray_values0=gv0, gray_values1=gv1, E=E_gt, a=a_gt, b=b_gt, S_bg=S_bg_gt,
-                    nonlinearity=nonlin_gt, decay=0, factor=factor_gt,
-                    received_energy=torch.ones(numel))
+                             nonlinearity=nonlin_gt, rate=0, factor=factor_gt,
+                             bleaching_integral=torch.ones(numel))
 _, _, received_energy = fit_bleaching(gv0, gv1, m_gt_nobleach, weights=torch.ones_like(m_gt_nobleach))     # Approximate bleaching
 
 m_gt = signal_model(gray_values0=gv0, gray_values1=gv1, E=E_gt, a=a_gt, b=b_gt, S_bg=S_bg_gt,
-                    nonlinearity=nonlin_gt, decay=decay_gt, factor=factor_gt, received_energy=received_energy)
+                    nonlinearity=nonlin_gt, rate=decay_gt, factor=factor_gt, bleaching_integral=received_energy)
 
 
 # Initialize arrays
