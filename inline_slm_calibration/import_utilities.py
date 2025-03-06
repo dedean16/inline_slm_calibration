@@ -28,7 +28,8 @@ def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False)
 
     # Check
     if len(ref_files) < 2:
-        raise ValueError(f'The ref_glob yielded {len(ref_files)} files. At least 2 files are required.')
+        raise ValueError(f'We found {len(ref_files)} files matching the ref_glob. At least 2 files are required. ' +
+                         f'Is the data path correctly configured in directories.py?')
 
     # Extract from files
     for n_f, filepath in enumerate(ref_files):
