@@ -215,6 +215,7 @@ def learn_field(
         iterations: int = 50,
         do_plot: bool = False,
         do_weights_plot: bool = False,
+        do_signal_fit_plot: bool = False,
         do_end_plot: bool = False,
         plot_per_its: int = 10,
         learning_rate: float = 0.1,
@@ -235,6 +236,7 @@ def learn_field(
         iterations: Number of learning iterations.
         do_plot: If True, plot during learning.
         do_weights_plot: If True, plot noise analysis results.
+        do_signal_fit_plot: If True, plot fit of the signal model.
         do_end_plot: If True, plot after learning.
         plot_per_its: Plot per this many learning iterations.
         learning_rate: Learning rate of the optimizer.
@@ -301,7 +303,7 @@ def learn_field(
     phase *= np.sign(phase[-1] - phase[0])
     phase -= phase.mean()
 
-    if do_plot and do_end_plot:
+    if do_signal_fit_plot:
         plt.figure(figsize=(17, 4.3))
         plt.subplots_adjust(left=0.05, right=0.98, bottom=0.15)
         plot_result_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1, weights, cmap=cmap)

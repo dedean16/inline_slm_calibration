@@ -23,6 +23,7 @@ plt.rcParams.update({'font.size': 14})
 settings = {
     "do_plot": True,            # Set to False for best performance
     "do_weights_plot": False,
+    "do_signal_fit_plot": True,
     "do_end_plot": True,
     "plot_per_its": 500,
     "nonlinearity": 2.0,
