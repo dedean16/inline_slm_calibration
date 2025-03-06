@@ -249,6 +249,7 @@ def learn_field(
     weights = compute_weights(measurements, stds, do_weights_plot)
 
     # Fit signal decay due to photobleaching
+    print('Start learning photobleaching...')
     decay, factor, received_energy = fit_bleaching(gray_values0, gray_values1, measurements, weights, do_plot)
 
     # Initial guess
@@ -260,6 +261,7 @@ def learn_field(
     nonlinearity = torch.tensor(nonlinearity, dtype=torch.float32, requires_grad=True)
 
     # Initialize parameters and optimizer
+    print('\nStart learning field...')
     params = [
         {"lr": learning_rate, "params": [E, a, b, S_bg]},
         {"lr": learning_rate * 0.1, "params": [nonlinearity]},

@@ -56,7 +56,7 @@ def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False)
     Er = ref_amplitude * np.exp(1j * ref_phase)
     Er_bias = 0.5 * (Er.real.max() + Er.real.min()) + 0.5j * (Er.imag.max() + Er.imag.min())  # Center E around 0
     Er_bias_prcnt = 100 * abs(Er_bias) / np.mean(abs(Er))
-    print(f'Bias in reference field = {Er_bias_prcnt:.1f}%')
+    print(f'Bias in reference field = {Er_bias_prcnt:.1f}% of amplitude.')
 
     if do_remove_bias:
         Er_centered = Er - Er_bias
