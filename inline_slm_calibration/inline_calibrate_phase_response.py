@@ -33,7 +33,7 @@ settings = {
     "iterations": 50000,
 }
 
-# === Import and process reference === #
+# === Import and process conventional measurements === #
 ref_gray, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std = \
     import_reference_calibrations(ref_glob, do_import_plot=settings['do_import_plot'])
 
