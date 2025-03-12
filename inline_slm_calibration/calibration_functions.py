@@ -116,11 +116,11 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
     for it in range(iterations):
         m_fit = photobleaching_model(factor, decay, received_energy)
         m_compensated = m / m_fit
-        loss = (take_diag(w) * ((take_diag(m) - take_diag(m_fit)).pow(2))).mean()
+        loss_bleaching = (take_diag(w) * ((take_diag(m) - take_diag(m_fit)).pow(2))).mean()
 
         measurements_compensated = m_compensated.detach().numpy().reshape(measurements.shape, order='F')
 
-        if (it % 20 == 0 or it == iterations-1) and do_plot:
+        if (it % 25 == 0 or it == iterations-1) and do_plot:
             plt.clf()
             plt.subplot(1, 3, 1)
             plt.imshow(measurements_compensated, aspect='auto', interpolation='nearest')
@@ -138,7 +138,7 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
             plt.title(f'Compensated diagonal entries (gv0==gv1), {it}')
             plt.pause(0.01)
 
-        loss.backward()
+        loss_bleaching.backward()
         optimizer.step()
         optimizer.zero_grad()
 
@@ -149,12 +149,12 @@ def fit_bleaching(gray_value0, gray_value1, measurements: np.ndarray, weights, d
         plt.imshow(ff)
         plt.title('Selected measurements\nwith gray values swapped')
 
-        plt.figure(figsize=(7, 3.5))
+        plt.figure(figsize=(7, 5))
         plt.subplots_adjust(bottom=0.15)
         indices = np.asarray(range(m.numel()))
         plt.plot(indices, m, label='All measurements')
         plt.plot(take_diag(indices), take_diag(m), 'or', label='$g_A=g_B$')
-        plt.plot(take_diag(indices), take_diag(m_fit.detach()), '--k', label='Fit')
+        plt.plot(indices, m_fit.detach(), '--k', label='Fit')
         plt.title('Photobleaching')
         plt.ylabel('Signal')
         plt.xlabel('Time (measurement index)')
