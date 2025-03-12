@@ -19,8 +19,9 @@ ref_glob = data_folder.glob("tg_fringe/tg-fringe-slm-calibration-r*_noraw.npz") 
 
 plt.rcParams.update({'font.size': 14})
 settings = {
-    "do_plot": True,
-    "do_weights_plot": False,
+    "do_live_plot": True,
+    "do_weights_plot": True,
+    "do_bleach_plot": True,
     "do_signal_fit_plot": True,
     "do_end_plot": True,
     "plot_per_its": 500,

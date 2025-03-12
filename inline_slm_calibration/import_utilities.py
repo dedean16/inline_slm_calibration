@@ -7,14 +7,14 @@ from numpy import ndarray as nd
 import matplotlib.pyplot as plt
 
 
-def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False):
+def import_reference_calibrations(ref_glob, do_import_plot=False, do_remove_bias=False):
     """
     Import a reference calibration from npz files.
 
     Args:
         ref_glob: Glob that defines the paths to the npz files. Each file must contain the keys "gray_values" and
             "field".
-        do_plot: Plot extracted calibration curves.
+        do_import_plot: Plot extracted calibration curves.
         do_remove_bias: Remove bias in the field by centering the minima and maxima of the real and imaginary parts.
 
     Returns:
@@ -64,7 +64,7 @@ def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False)
         ref_phase = np.unwrap(np.angle(Er_centered))
         ref_phase -= ref_phase.mean()
 
-    if do_plot:
+    if do_import_plot:
         plt.figure()
         plt.plot(np.asarray(ref_phase_all).T)
         plt.xlabel('Gray value')
@@ -82,7 +82,7 @@ def import_reference_calibrations(ref_glob, do_plot=False, do_remove_bias=False)
     return ref_gray, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std
 
 
-def import_inline_calibration(inline_file, do_plot=False) -> tuple[nd, nd, nd, nd]:
+def import_inline_calibration(inline_file, do_import_plot=False) -> tuple[nd, nd, nd, nd]:
     """
     Import an inline calibration.
 
@@ -91,7 +91,7 @@ def import_inline_calibration(inline_file, do_plot=False) -> tuple[nd, nd, nd, n
             'frames': 4D array containing the raw signal measurements. First two dims may be used to store the frames.
             'gray_values1', 'gray_values2': correspond to gray values of group A and B.
             'dark_frame': contains frame taken with laser blocked.
-        do_plot: Plot dark_frame noise statistics.
+        do_import_plot: Plot dark_frame noise statistics.
 
     Returns:
         gv0: Gray values for group A.
@@ -105,7 +105,7 @@ def import_inline_calibration(inline_file, do_plot=False) -> tuple[nd, nd, nd, n
     gv0 = npz_data['gray_values1'][0]
     gv1 = npz_data['gray_values2'][0]
 
-    if do_plot:
+    if do_import_plot:
         # Plot dark frame histogram
         plt.figure()
         plt.hist(npz_data['dark_frame'].flatten(), bins=range(-100, 100))

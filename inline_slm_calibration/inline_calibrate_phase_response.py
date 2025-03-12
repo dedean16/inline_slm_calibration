@@ -21,8 +21,10 @@ ref_glob = data_folder.glob("tg_fringe/tg-fringe-slm-calibration-r*_noraw.npz") 
 
 plt.rcParams.update({'font.size': 14})
 settings = {
-    "do_plot": True,            # Set to False for best performance
-    "do_weights_plot": False,
+    "do_live_plot": True,            # Set to False for best performance
+    "do_import_plot": True,
+    "do_weights_plot": True,
+    "do_bleach_plot": True,
     "do_signal_fit_plot": True,
     "do_end_plot": True,
     "plot_per_its": 500,
@@ -33,7 +35,7 @@ settings = {
 
 # === Import and process reference === #
 ref_gray, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std = \
-    import_reference_calibrations(ref_glob, do_plot=settings['do_plot'])
+    import_reference_calibrations(ref_glob, do_import_plot=settings['do_import_plot'])
 
 # Initialize
 inline_files = list(inline_glob)
@@ -45,15 +47,15 @@ nonlin_all = [None] * len(inline_files)
 
 # Process files
 for n_f, filepath in enumerate(inline_files):
-    if settings['do_plot']:
-        print('Note: Live plotting is on. For the best performance, set settings["do_plot"] to False.')
+    if settings['do_live_plot']:
+        print('Note: Live plotting is on. For the best performance, set settings["do_live_plot"] to False.')
 
     # === Import and process inline measurement === #
-    gv0, gv1, measurements, stds = import_inline_calibration(filepath, settings['do_plot'])
+    gv0, gv1, measurements, stds = import_inline_calibration(filepath, settings['do_import_plot'])
 
     # Learn phase response
-    nonlin, a, b, S_bg, phase, amplitude, amplitude_norm = learn_field(
-        gray_values0=gv0, gray_values1=gv1, measurements=measurements, stds=stds, **settings)
+    nonlin, a, b, S_bg, phase, amplitude, amplitude_norm = \
+        learn_field(gray_values0=gv0, gray_values1=gv1, measurements=measurements, stds=stds, **settings)
 
     print(f"\nFile {n_f}/{len(inline_files)} results:" \
           + f"a={a:.4f}, b={b:.4f}, S_bg={S_bg:.4f}, nonlin = {nonlin:.4f} ({settings['nonlinearity']})\n")
