@@ -21,6 +21,7 @@ plt.rcParams.update({'font.size': 14})
 settings = {
     "do_plot": True,
     "do_weights_plot": False,
+    "do_signal_fit_plot": True,
     "do_end_plot": True,
     "plot_per_its": 500,
     "nonlinearity": 2.0,
@@ -55,11 +56,12 @@ decay_gt = 5e-4
 factor_gt = 1.0
 
 # Noise
-read_noise_level = 0.4
-shot_noise_level = 0.2
-n_samples = 10
+read_noise_level = 1.0
+shot_noise_level = 1.0
+n_samples = 100
 
 # === Create synthetic measurement === #
+# Note: The bleaching curve is not created with the same model as what is fit. For low bleaching, this is close enough.
 m_gt_nobleach = signal_model(gray_values0=gv0, gray_values1=gv1, E=E_gt, a=a_gt, b=b_gt, S_bg=S_bg_gt,
                     nonlinearity=nonlin_gt, decay=0, factor=factor_gt,
                     received_energy=torch.ones(numel))
