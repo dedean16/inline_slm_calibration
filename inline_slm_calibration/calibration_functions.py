@@ -53,12 +53,23 @@ def compute_weights(measurements, stds, do_weight_plot=False):
         fit_img_var = noise_model(m_sorted, a_n, b_n, c_n)
         fit_noise_var = noise_model(m_sorted, 0, b_n, c_n)
 
-        # Plot noise model fit
+        # Plot noise model fit - log log axes
         plt.figure()
         plt.subplots_adjust(bottom=0.12)
         plt.loglog(measurements.flatten(), stds.flatten() ** 2, '+', color='C0', label='Measurement', markersize=10)
         plt.loglog(m_sorted, fit_img_var, '--k', label='Fit')
         # plt.loglog(m_sorted, fit_noise_var, ':r', label='Fit $\\sigma^2_n$')
+        plt.xlabel('Mean of image')
+        plt.ylabel('Variance of image')
+        plt.title('Noise analysis')
+        plt.legend()
+
+        # Plot noise model fit - linear axes
+        plt.figure()
+        plt.subplots_adjust(bottom=0.12)
+        plt.plot(measurements.flatten(), stds.flatten() ** 2, '+', color='C0', label='Measurement')
+        plt.plot(m_sorted, fit_img_var, '--k', label='Fit')
+        plt.plot(m_sorted, fit_noise_var, ':r', label='Noise')
         plt.xlabel('Mean of image')
         plt.ylabel('Variance of image')
         plt.title('Noise analysis')
