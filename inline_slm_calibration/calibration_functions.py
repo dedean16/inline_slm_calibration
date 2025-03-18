@@ -94,8 +94,8 @@ def compute_weights(measurements, stds, do_weight_plot=False):
     return weights
 
 
-def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | float, do_bleach_plot=False,
-                  iterations=500):
+def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | float, nonlinearity: tt | float,
+                  do_bleach_plot=False, iterations=500):
     """
     Fit photobleaching
 
@@ -116,17 +116,23 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
 
     learning_rate = 5e-4
 
+    def compute_S_beta(S_m, S_0, beta, N):
+        """S_β(t) = ∫ (S(t) / S₀)^(β/N) dt"""
+        return ((S_m / S_0) ** (beta / N)).cumsum() / S_m.numel()
+
     # Initial values
-    intensity = (torch.rand_like(S_m, dtype=torch.float32)).requires_grad_(True)
-    N = torch.tensor(nonlinearity, dtype=torch.float32, requires_grad=False)
-    # efficiency = S_m.std().detach().clone().requires_grad_(True)
-    efficiency = S_m[0].clone().requires_grad_(False)
-    decay = torch.tensor(1.0, dtype=torch.float32, requires_grad=True)
-    bleach_accel = N.detach().clone().requires_grad_(True)
+    N = nonlinearity
+    beta = torch.tensor(N, requires_grad=True)
+    S_0 = S_m[max_mask][0].clone().requires_grad_(True)
+    alpha = torch.tensor(1.0, requires_grad=True)
+
+    # First estimate of bleaching rate, by finding exponential through first and last point
+    S_beta_last_init = compute_S_beta(S_m, S_0, beta, N)[max_mask][-1]
+    rate_init = (-S_beta_last_init / torch.log(S_m[max_mask][-1] / S_0)).detach()
+    rate = torch.tensor(rate_init, requires_grad=True)  # Overall bleaching rate lambda
 
     params = [
-        {"params": [intensity, N, efficiency, bleach_accel], "lr": learning_rate},
-        {"params": [decay], "lr": 100 * learning_rate},
+        {"params": [beta, S_0, alpha, rate], "lr": learning_rate},
     ]
     optimizer = torch.optim.Adam(params, lr=learning_rate, amsgrad=True)
 
@@ -134,7 +140,8 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
         plt.figure(figsize=(15, 5))
 
     for it in range(iterations):
-        S_fit = photobleaching_model(intensity, nonlinearity, efficiency, decay, bleach_accel)
+        S_beta = compute_S_beta(S_m, S_0, beta, N)
+        S_fit = photobleaching_model()
         S_fit_atmax = photobleaching_model(intensity, 0, efficiency, decay, bleach_accel)
         # loss = ((w[~max_mask] * (S_fit[~max_mask] - S_m[~max_mask]).pow(2)).sum()
         #     + (10 * w[max_mask] * (S_fit_atmax[max_mask] - S_m[max_mask]).pow(2)).sum()) / S_m.numel()
@@ -284,7 +291,8 @@ def learn_field(
 
     # Fit signal decay due to photobleaching
     print('Start learning photobleaching...')
-    decay, factor, received_energy = fit_bleaching(gray_values0, gray_values1, measurements, weights, do_bleach_plot)
+    decay, factor, received_energy = \
+        fit_bleaching(gray_values0, gray_values1, measurements, weights, nonlinearity, do_bleach_plot)
 
     # Initial guess
     E = torch.exp(2j * np.pi * torch.rand(gray_values0.size))                       # Field response
@@ -292,13 +300,13 @@ def learn_field(
     a = torch.tensor(1.0, requires_grad=True, dtype=torch.complex64)           # Group A complex pre-factor
     b = torch.tensor(1.0, requires_grad=True, dtype=torch.complex64)           # Group B complex pre-factor
     S_bg = torch.tensor(0.0, requires_grad=True)
-    nonlinearity = torch.tensor(nonlinearity, dtype=torch.float32, requires_grad=True)
+    N = torch.tensor(nonlinearity, dtype=torch.float32, requires_grad=True)
 
     # Initialize parameters and optimizer
     print('\nStart learning field...')
     params = [
         {"lr": learning_rate, "params": [E, a, b, S_bg]},
-        {"lr": learning_rate * 0.1, "params": [nonlinearity]},
+        {"lr": learning_rate * 0.1, "params": [N]},
     ]
     optimizer = torch.optim.Adam(params, lr=learning_rate, amsgrad=True)
     progress_bar = tqdm(total=iterations)
@@ -306,7 +314,7 @@ def learn_field(
     # Gradient descent loop
     for it in range(iterations):
         predicted_signal = signal_model(
-            gray_values0, gray_values1, E, a, b, S_bg, nonlinearity, decay, factor, received_energy)
+            gray_values0, gray_values1, E, a, b, S_bg, N, decay, factor, received_energy)
         loss = (weights * (measurements - predicted_signal).pow(2)).mean()
 
         # Gradient descent step
@@ -345,5 +353,5 @@ def learn_field(
         print(f'\nClose plots to continue... or turn off live plots (set do_live_plot to False)')
         plt.show()
 
-    return nonlinearity.item(), a.item(), b.item(), S_bg.item(), phase, amplitude, amplitude_norm
+    return N.item(), a.item(), b.item(), S_bg.item(), phase, amplitude, amplitude_norm
 
