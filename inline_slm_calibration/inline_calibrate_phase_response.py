@@ -79,7 +79,11 @@ inline_phase_std = np.std(inline_phase_all, axis=0)
 print([f'{amp_std:.2g}' for amp_std in inline_amplitude_norm_std_per_measurement])
 n_max = np.argmax(inline_amplitude_norm_std_per_measurement)
 print(f'σ_A={inline_amplitude_norm_std_per_measurement[n_max]:.2g} for {inline_files[n_max]}')
-print(f'avg σ_φ={np.mean(inline_phase_std):.3g} rad')
+print(f'Inline: avg σ_φ={np.mean(inline_phase_std):.3g} rad')
+print(f'Inline: avg A_φ={np.mean(inline_amplitude_norm_std):.3g} (normalized)')
+
+print(f'Conventional (TG): avg σ_φ={np.mean(ref_phase_std):.3g} rad')
+print(f'Conventional (TG): avg A_φ={np.mean(ref_amplitude_norm_std):.3g} (normalized)')
 
 if settings['do_end_plot']:
     plot_results_ground_truth(
