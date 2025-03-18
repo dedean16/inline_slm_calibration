@@ -58,7 +58,7 @@ def compute_weights(measurements, stds, do_weight_plot=False):
         plt.subplots_adjust(bottom=0.12)
         plt.loglog(measurements.flatten(), stds.flatten() ** 2, '+', color='C0', label='Measurement', markersize=10)
         plt.loglog(m_sorted, fit_img_var, '--k', label='Fit')
-        # plt.loglog(m_sorted, fit_noise_var, ':r', label='Fit $\\sigma^2_n$')
+        plt.loglog(m_sorted, fit_noise_var, ':r', label='Noise')
         plt.xlabel('Mean of image')
         plt.ylabel('Variance of image')
         plt.title('Noise analysis')
