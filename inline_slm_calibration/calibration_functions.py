@@ -135,7 +135,7 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
 
     params = [
         {"params": [S_0, alpha, lamd], "lr": learning_rate},
-        {"params": [beta_N_ratio], "lr": 10*learning_rate},
+        {"params": [beta_N_ratio], "lr": learning_rate},
     ]
     optimizer = torch.optim.Adam(params, lr=learning_rate, amsgrad=True)
 
