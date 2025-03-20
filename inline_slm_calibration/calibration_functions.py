@@ -206,12 +206,17 @@ def photobleaching_model(S_0: tt, S_beta: tt, lamd: tt, beta_N_ratio: tt, alpha:
     We define I(t) such that (I(t))^N == 1 when g_A(t) == g_B(t).
 
     Args:
+        S_0
+        S_beta
+        lamd
+        beta_N_ratio
+        alpha
 
     Returns:
         The estimated signal efficiency η(t)
     """
     N_beta_ratio = 1 / beta_N_ratio
-    gamma = alpha * beta_N_ratio
+    # gamma = alpha * beta_N_ratio
     # taylor_factor = 1 / (1 + (gamma - 1) * (N_beta_ratio * S_beta * (2*lamd + S_beta)) / (2*lamd**2))
     taylor_factor = 1.0
     return S_0 * torch.exp(-N_beta_ratio * S_beta / lamd) / taylor_factor
