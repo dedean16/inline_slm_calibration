@@ -118,7 +118,7 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
     # Initial values
     factor = ensure_tensor(0.1 * (m.max() - m.min())).requires_grad_(True)
     decay = torch.tensor(0.1 / len(m), dtype=torch.float32, requires_grad=True)
-    received_energy = np.cumsum(torch.maximum(m,torch.tensor(0.0)))
+    signal_integral = np.cumsum(torch.maximum(m,torch.tensor(0.0)))
 
     def take_diag(M):
         return M.reshape((measurements.shape[1], measurements.shape[0]))[:, sym_selection].diagonal()
@@ -133,7 +133,7 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
         plt.figure(figsize=(15, 5))
 
     for it in range(iterations):
-        m_fit = photobleaching_model(factor, decay, received_energy)
+        m_fit = photobleaching_model(factor, decay, signal_integral)
         m_compensated = m / m_fit
         loss_bleaching = (take_diag(w) * ((take_diag(m) - take_diag(m_fit)).pow(2))).mean()
 
@@ -180,10 +180,10 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
         plt.legend()
         plt.pause(0.1)
 
-    return decay, factor, received_energy
+    return decay, factor, signal_integral
 
 
-def photobleaching_model(factor, decay, received_energy):
+def photobleaching_model(factor, decay, signal_integral):
     """
     Photobleaching model
 
@@ -192,13 +192,13 @@ def photobleaching_model(factor, decay, received_energy):
     Args:
         factor: α₀
         decay: D
-        received_energy: ∑S
+        signal_integral: ∑S
     """
-    return factor * torch.exp(-decay * received_energy)
+    return factor * torch.exp(-decay * signal_integral)
 
 
 def signal_model(gray_values0, gray_values1, E: tt, a: tt, b: tt, S_bg: tt, nonlinearity: tt, decay: tt,
-                 factor, received_energy) -> tt:
+                 factor, signal_integral) -> tt:
     """
     Compute feedback signal from two interfering fields.
 
@@ -221,7 +221,7 @@ def signal_model(gray_values0, gray_values1, E: tt, a: tt, b: tt, S_bg: tt, nonl
     E0 = E[gray_values0].view(-1, 1)
     E1 = E[gray_values1].view(1, -1)
     I_excite = (a * E0 + b * E1).abs().pow(2)
-    bleach_factor = photobleaching_model(factor, decay, received_energy).reshape((len(gray_values1), len(gray_values0))).T
+    bleach_factor = photobleaching_model(factor, decay, signal_integral).reshape((len(gray_values1), len(gray_values0))).T
     return I_excite.pow(nonlinearity) * bleach_factor + S_bg
 
 
@@ -277,7 +277,7 @@ def learn_field(
 
     # Fit signal decay due to photobleaching
     print('Start learning photobleaching...')
-    decay, factor, received_energy = fit_bleaching(gray_values0, gray_values1, measurements, weights, do_bleach_plot)
+    decay, factor, signal_integral = fit_bleaching(gray_values0, gray_values1, measurements, weights, do_bleach_plot)
 
     # Initial guess
     E = torch.exp(2j * np.pi * torch.rand(gray_values0.size))                       # Field response
@@ -299,7 +299,7 @@ def learn_field(
     # Gradient descent loop
     for it in range(iterations):
         predicted_signal = signal_model(
-            gray_values0, gray_values1, E, a, b, S_bg, nonlinearity, decay, factor, received_energy)
+            gray_values0, gray_values1, E, a, b, S_bg, nonlinearity, decay, factor, signal_integral)
         loss = (weights * (measurements - predicted_signal).pow(2)).mean()
 
         # Gradient descent step
