@@ -129,17 +129,20 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
     ]
     optimizer = torch.optim.Adam(params, lr=learning_rate, amsgrad=True)
 
+    w_diag = take_diag(w)
+    m_diag = take_diag(m)
+
     if do_bleach_plot:
         plt.figure(figsize=(15, 5))
 
     for it in range(iterations):
         m_fit = photobleaching_model(factor, decay, signal_integral)
-        m_compensated = m / m_fit
-        loss_bleaching = (take_diag(w) * ((take_diag(m) - take_diag(m_fit)).pow(2))).mean()
-
-        measurements_compensated = m_compensated.detach().numpy().reshape(measurements.shape, order='F')
+        loss_bleaching = (w_diag * ((m_diag - take_diag(m_fit)).pow(2))).mean()
 
         if (it % 25 == 0 or it == iterations-1) and do_bleach_plot:
+            m_compensated = m / m_fit
+            measurements_compensated = m_compensated.detach().numpy().reshape(measurements.shape, order='F')
+
             plt.clf()
             plt.subplot(1, 3, 1)
             plt.imshow(measurements_compensated, aspect='auto', interpolation='nearest')
@@ -161,9 +164,9 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
         optimizer.step()
         optimizer.zero_grad()
 
-    ff = measurements_compensated[sym_selection, :]
-
     if do_bleach_plot:
+        ff = measurements_compensated[sym_selection, :]
+
         plt.figure()
         plt.imshow(ff)
         plt.title('Selected measurements\nwith gray values swapped')
