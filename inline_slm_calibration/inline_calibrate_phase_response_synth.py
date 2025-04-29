@@ -65,11 +65,11 @@ n_samples = 100
 # Note: The bleaching curve is not created with the same model as what is fit. For low bleaching, this is close enough.
 m_gt_nobleach = signal_model(gray_values0=gv0, gray_values1=gv1, E=E_gt, a=a_gt, b=b_gt, S_bg=S_bg_gt,
                     nonlinearity=nonlin_gt, decay=0, factor=factor_gt,
-                    received_energy=torch.ones(numel))
-_, _, received_energy = fit_bleaching(gv0, gv1, m_gt_nobleach, weights=torch.ones_like(m_gt_nobleach))     # Approximate bleaching
+                    signal_integral=torch.ones(numel))
+_, _, signal_integral = fit_bleaching(gv0, gv1, m_gt_nobleach, weights=torch.ones_like(m_gt_nobleach))     # Approximate bleaching
 
 m_gt = signal_model(gray_values0=gv0, gray_values1=gv1, E=E_gt, a=a_gt, b=b_gt, S_bg=S_bg_gt,
-                    nonlinearity=nonlin_gt, decay=decay_gt, factor=factor_gt, received_energy=received_energy)
+                    nonlinearity=nonlin_gt, decay=decay_gt, factor=factor_gt, signal_integral=signal_integral)
 
 
 # Initialize arrays
