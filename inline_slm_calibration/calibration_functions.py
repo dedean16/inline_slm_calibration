@@ -106,7 +106,6 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
         TODO
     """
     m = measurements.t().contiguous().view(-1) # flatten("F")
-    m = m / m.abs().mean()
     w = ensure_tensor(weights)
 
     # locate elements for which gv0 == gv1. These are measured twice and should be equal except for noise and photobleaching.
