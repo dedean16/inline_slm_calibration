@@ -127,9 +127,10 @@ def fit_bleaching(gray_values0, gray_values1, measurements: tt, weights: tt | fl
     m_diag = take_diag(m)
 
     # Initial values
-    factor = ensure_tensor(0.1 * (m.max() - m.min())).requires_grad_(True)
-    decay = torch.tensor(0.1 / len(m), dtype=torch.float32, requires_grad=True)
     signal_integral = np.cumsum(torch.maximum(m,torch.tensor(0.0)))
+    factor = ensure_tensor((m.max() - m.min())).requires_grad_(True)
+    decay = (-torch.log(m_diag[-1] / m_diag[0]) / signal_integral[-1]).requires_grad_(True)
+    # Note: initial guess of decay rate; finding exponential through first and last point
 
     # Optimizer
     learning_rate = 0.05
