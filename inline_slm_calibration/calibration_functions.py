@@ -98,12 +98,20 @@ def fit_bleaching(gray_values0, gray_values1, measurements: tt, weights: tt | fl
                   iterations=250):
     """
     Fit photobleaching
+    Fit using a weighted least-squares fit. Model: S(t) = S_0⋅exp(-P⋅∫S(t)dt)
 
     Args:
-        TODO
+        gray_values0: Contains gray values of group A, corresponding to dim 0 of feedback.
+        gray_values1: Contains gray values of group B, corresponding to dim 1 of feedback.
+        measurements: Average signal measurements as 2D array. Indices correspond to gray_values0 and gray_values1.
+        weights: Weights for weighted least-squares fit.
+        do_bleach_plot: If True, plot photobleaching analysis results.
+        iterations: Number of learning iterations.
 
     Returns:
-        TODO
+        decay: Decay rate of the photobleached signal. "P" in the paper.
+        factor: Signal factor. Approximately equal to first signal value. "S_0" in the paper.
+        signal_integral: Cumulative sum of signal. "∫S(t)dt" in the paper.
     """
     m = measurements.t().contiguous().view(-1) # flatten("F")
     w = ensure_tensor(weights)
