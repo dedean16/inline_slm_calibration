@@ -347,9 +347,6 @@ def learn_field(
         plt.figure(figsize=(17, 4.3))
         plt.subplots_adjust(left=0.05, right=0.98, bottom=0.15)
         plot_result_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1, weights, cmap=cmap)
-
-        plt.figure(figsize=(12, 6))
-        plot_field_response(E)
         plt.pause(0.1)
 
     if do_live_plot:
