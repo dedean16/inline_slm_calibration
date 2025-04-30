@@ -31,6 +31,7 @@ settings = {
     "cmap": 'viridis',
 }
 
+# Number of synthetic runs
 num_runs = 3
 
 
@@ -53,12 +54,12 @@ S_bg_gt = 1.0
 nonlin_gt = 2.0
 
 # Photobleaching
-decay_gt = 5e-4
+decay_gt = 5e-5
 factor_gt = 1.0
 
 # Noise
-read_noise_level = 1.0
-shot_noise_level = 1.0
+read_noise_level = 0.5
+shot_noise_level = 0.5
 n_samples = 100
 
 # === Create synthetic measurement === #
