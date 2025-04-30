@@ -300,8 +300,10 @@ def learn_field(
 
     # Gradient descent loop
     for it in range(iterations):
+        # Note: We discard the fit factor from the photobleaching fit. It is not required and will be compensated by the
+        # transmission coefficients a and b.
         predicted_signal = signal_model(
-            gray_values0, gray_values1, E, a, b, S_bg, nonlinearity, decay, factor, signal_integral)
+            gray_values0, gray_values1, E, a, b, S_bg, nonlinearity, decay, 1.0, signal_integral)
         loss = (weights * (measurements - predicted_signal).pow(2)).mean()
 
         # Gradient descent step
