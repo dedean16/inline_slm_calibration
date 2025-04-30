@@ -94,8 +94,8 @@ def compute_weights(measurements, stds, do_weight_plot=False):
     return weights
 
 
-def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | float, do_bleach_plot=False,
-                  iterations=500):
+def fit_bleaching(gray_values0, gray_values1, measurements: tt, weights: tt | float, do_bleach_plot=False,
+                  iterations=250):
     """
     Fit photobleaching
 
@@ -108,28 +108,29 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
     m = measurements.t().contiguous().view(-1) # flatten("F")
     w = ensure_tensor(weights)
 
-    # locate elements for which gv0 == gv1. These are measured twice and should be equal except for noise and photobleaching.
-    gv0 = np.asarray(gray_value0)
-    sym_selection = [np.nonzero(gv0 == gv1)[0][0].item() for gv1 in gray_value1]
+    # locate elements for which gv0 == gv1. These are measured twice and should be equal except for noise and bleaching.
+    gv0 = np.asarray(gray_values0)
+    sym_selection = [np.nonzero(gv0 == gv1)[0][0].item() for gv1 in gray_values1]
 
-    learning_rate = 0.1
+    def take_diag(M):
+        return M.reshape((measurements.shape[1], measurements.shape[0]))[:, sym_selection].diagonal()
+
+    w_diag = take_diag(w)
+    m_diag = take_diag(m)
 
     # Initial values
     factor = ensure_tensor(0.1 * (m.max() - m.min())).requires_grad_(True)
     decay = torch.tensor(0.1 / len(m), dtype=torch.float32, requires_grad=True)
     signal_integral = np.cumsum(torch.maximum(m,torch.tensor(0.0)))
 
-    def take_diag(M):
-        return M.reshape((measurements.shape[1], measurements.shape[0]))[:, sym_selection].diagonal()
+    # Optimizer
+    learning_rate = 0.05
 
     params = [
         {"params": [factor], "lr": learning_rate},
         {"params": [decay], "lr": 10*learning_rate / len(m)}
     ]
     optimizer = torch.optim.Adam(params, lr=learning_rate, amsgrad=True)
-
-    w_diag = take_diag(w)
-    m_diag = take_diag(m)
 
     if do_bleach_plot:
         plt.figure(figsize=(15, 5))
@@ -138,7 +139,8 @@ def fit_bleaching(gray_value0, gray_value1, measurements: tt, weights: tt | floa
         m_fit = photobleaching_model(factor, decay, signal_integral)
         loss_bleaching = (w_diag * ((m_diag - take_diag(m_fit)).pow(2))).mean()
 
-        if (it % 25 == 0 or it == iterations-1) and do_bleach_plot:
+        # Plot
+        if (it % 10 == 0 or it == iterations-1) and do_bleach_plot:
             m_compensated = m / m_fit
             measurements_compensated = m_compensated.detach().numpy().reshape(measurements.shape, order='F')
 
