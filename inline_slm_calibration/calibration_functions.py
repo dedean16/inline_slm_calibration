@@ -1,3 +1,6 @@
+# Built-in
+import time
+
 # External 3rd party
 import torch
 from torch import Tensor as tt
@@ -254,7 +257,7 @@ def learn_field(
         plot_per_its: int = 10,
         cmap=colormap_adjust_piecewise('viridis'),
         learning_rate: float = 0.1,
-) -> tuple[float, float, float, float, nd, nd, nd]:
+) -> tuple[float, float, float, float, nd, nd, nd, nd]:
     """
     Learn the field response from dual gray value measurements.
 
@@ -302,12 +305,15 @@ def learn_field(
 
     # Initialize parameters and optimizer
     print('\nStart learning field...')
+    time.sleep(0.05)
+
     params = [
         {"lr": learning_rate, "params": [E, a, b, S_bg]},
         {"lr": learning_rate * 0.1, "params": [nonlinearity]},
     ]
     optimizer = torch.optim.Adam(params, lr=learning_rate, amsgrad=True)
     progress_bar = tqdm(total=iterations)
+    losses = np.full(iterations, np.nan)
 
     # Gradient descent loop
     for it in range(iterations):
@@ -316,6 +322,8 @@ def learn_field(
         predicted_signal = signal_model(
             gray_values0, gray_values1, E, a, b, S_bg, nonlinearity, decay, 1.0, signal_integral)
         loss = (weights * (measurements - predicted_signal).pow(2)).mean()
+
+        losses[it] = loss
 
         # Gradient descent step
         loss.backward()
@@ -353,5 +361,5 @@ def learn_field(
         print(f'\nClose plots to continue... or turn off live plots (set do_live_plot to False)')
         plt.show()
 
-    return nonlinearity.item(), a.item(), b.item(), S_bg.item(), phase, amplitude, amplitude_norm
+    return nonlinearity.item(), a.item(), b.item(), S_bg.item(), phase, amplitude, amplitude_norm, losses
 

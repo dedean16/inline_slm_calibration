@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 # Internal
 from calibration_functions import learn_field
 from directories import data_folder
-from plot_utilities import plot_results_ground_truth
+from plot_utilities import plot_results_ground_truth, plot_losses
 from import_utilities import import_reference_calibrations, import_inline_calibration
 
 
@@ -44,6 +44,7 @@ inline_phase_all = [None] * len(inline_files)
 inline_amp_all = [None] * len(inline_files)
 inline_amp_norm_all = [None] * len(inline_files)
 nonlin_all = [None] * len(inline_files)
+losses_all = np.full((settings['iterations'], len(inline_files)), np.nan)
 
 # Process files
 for n_f, filepath in enumerate(inline_files):
@@ -54,7 +55,7 @@ for n_f, filepath in enumerate(inline_files):
     gv0, gv1, measurements, stds = import_inline_calibration(filepath, settings['do_import_plot'])
 
     # Learn phase response
-    nonlin, a, b, S_bg, phase, amplitude, amplitude_norm = \
+    nonlin, a, b, S_bg, phase, amplitude, amplitude_norm, losses = \
         learn_field(gray_values0=gv0, gray_values1=gv1, measurements=measurements, stds=stds, **settings)
 
     print(f"\nFile {n_f}/{len(inline_files)} results:" \
@@ -66,6 +67,7 @@ for n_f, filepath in enumerate(inline_files):
     inline_amp_norm_all[n_f] = amplitude_norm
     inline_phase_all[n_f] = phase
     nonlin_all[n_f] = nonlin
+    losses_all[:, n_f] = losses
 
 # Summarize results with median and std
 inline_gray = inline_gray_all[0]
@@ -91,3 +93,6 @@ if settings['do_end_plot']:
         # -> leave out index 255 from plot
         inline_gray[:-1], inline_phase[:-1], inline_phase_std[:-1], inline_amplitude_norm[:-1], inline_amplitude_norm_std[:-1],
         ref_gray, ref_phase, ref_phase_std, ref_amplitude_norm, ref_amplitude_norm_std)
+
+    plot_losses(losses_all)
+    plt.show()

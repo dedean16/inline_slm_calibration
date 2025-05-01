@@ -89,7 +89,7 @@ for r in range(num_runs):
     stds_synth = m_synth_raw.std(dim=-1)
 
     # Learn phase response
-    nonlin, a, b, S_bg, phase, amplitude, amplitude_norm = learn_field(
+    nonlin, a, b, S_bg, phase, amplitude, amplitude_norm, losses = learn_field(
         gray_values0=gv0, gray_values1=gv1, measurements=measurements_synth, stds=stds_synth, **settings)
 
     print(f"a={a:.4f}, b={b:.4f}, S_bg={S_bg:.4f}, nonlin = {nonlin:.4f} ({settings['nonlinearity']})")

@@ -88,7 +88,7 @@ def plot_results_ground_truth(gray_values, phase, phase_std, amplitude_norm, amp
     plt.ylabel('Phase difference (rad)')
     plt.title('Phase difference (bias removed)')
 
-    plt.show()
+    plt.pause(0.1)
 
 
 def plot_field_response(field_response_per_gv):
@@ -160,3 +160,11 @@ def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray
     ax.set_position([pos.x0 + 0.05, pos.y0, pos.width - 0.05, pos.height])
 
     plt.pause(1)
+
+
+def plot_losses(losses):
+    plt.figure()
+    plt.loglog(losses)
+    plt.xlabel('Iterations')
+    plt.ylabel('Loss')
+    plt.title('AMSGrad Losses')
