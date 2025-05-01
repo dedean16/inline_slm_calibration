@@ -21,13 +21,15 @@ ref_glob = data_folder.glob("tg_fringe/tg-fringe-slm-calibration-r*_noraw.npz") 
 
 plt.rcParams.update({'font.size': 14})
 settings = {
-    "do_live_plot": True,            # Set to False for best performance
+    "do_live_plot": True,           # Set to False for best performance
     "do_import_plot": True,
     "do_weights_plot": True,
     "do_bleach_plot": True,
     "do_signal_fit_plot": True,
     "do_end_plot": True,
-    "plot_per_its": 250,
+    "plot_per_its_first": 50,       # Initially, plot very often
+    "plot_per_its_fast": 500,       # Then, plot less often
+    "plot_fast_it": 2000,           # After this iteration, plot less often
     "nonlinearity": 2.0,
     "learning_rate": 0.1,
     "iterations": 50000,

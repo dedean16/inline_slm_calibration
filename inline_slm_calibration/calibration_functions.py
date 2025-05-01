@@ -254,7 +254,9 @@ def learn_field(
         do_signal_fit_plot: bool = False,
         do_end_plot: bool = False,
         do_import_plot: bool = False,
-        plot_per_its: int = 10,
+        plot_per_its_first: int = 10,
+        plot_per_its_fast: int = 100,
+        plot_fast_it: int = 100,
         cmap=colormap_adjust_piecewise('viridis'),
         learning_rate: float = 0.1,
 ) -> tuple[float, float, float, float, nd, nd, nd, nd]:
@@ -277,7 +279,9 @@ def learn_field(
         do_signal_fit_plot: If True, plot fit of the signal model.
         do_end_plot: Unused. Accepted for convenient dictionary argument.
         do_import_plot: Unused. Accepted for convenient dictionary argument.
-        plot_per_its: Plot per this many learning iterations.
+        plot_per_its_first: Plot per this many learning iterations, initially.
+        plot_per_its_fast: Plot per this many learning iterations, after iteration plot_fast_it.
+        plot_fast_it: After this iteration, plot less often.
         cmap: Colormap for plotting signal measurements and model. Non-linear colormap may be useful for highly bleached
             measurements.
         learning_rate: Learning rate of the optimizer.
@@ -331,8 +335,14 @@ def learn_field(
         optimizer.step()
         optimizer.zero_grad()
 
-        # Plot
-        if do_live_plot and (it % plot_per_its == 0 or it == 0 or it == iterations - 1):
+        # === Plot === #
+        # Determine if this iteration is selected to be plotted
+        it_is_selected_for_plot = (it % plot_per_its_first == 0 and it < plot_fast_it) \
+                                  or (it % plot_per_its_fast == 0 and it >= plot_fast_it) \
+                                  or (it == 0) \
+                                  or (it == iterations - 1)
+
+        if do_live_plot and it_is_selected_for_plot:
             if it == 0:
                 plt.figure(figsize=(13, 4))
             else:
@@ -340,7 +350,7 @@ def learn_field(
             plt.subplot(1, 3, 1)
             plot_field_response(E)
             plot_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1, cmap=cmap)
-            plt.title(f"feedback loss: {loss:.3g}\na: {a:.3g}, b: {b:.3g}, S_bg: {S_bg:.3g}")
+            plt.title(f"It. {it}")
             plt.pause(0.01)
 
         progress_bar.update()
