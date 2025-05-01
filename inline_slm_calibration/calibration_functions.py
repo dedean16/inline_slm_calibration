@@ -287,6 +287,7 @@ def learn_field(
     """
     # Initialize
     measurements = torch.tensor(measurements, dtype=torch.float32)
+    stds = stds / measurements.std()
     measurements = measurements / measurements.std()                                # Normalize by std
 
     weights = compute_weights(measurements, stds, do_weights_plot)

@@ -150,7 +150,6 @@ def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray
     plt.title("d. Histogram")
     plt.xlabel('Weighted residuals')
     plt.ylabel('Counts')
-    plt.xticks([-wr_std, 0, wr_std], ['$-\\sigma$', '0', '$\\sigma$'])
     plt.xlim([-3*wr_std, 3*wr_std])
 
     # Adjust the position of the current axes to add left margin

@@ -27,9 +27,9 @@ settings = {
     "do_bleach_plot": True,
     "do_signal_fit_plot": True,
     "do_end_plot": True,
-    "plot_per_its": 500,
+    "plot_per_its": 250,
     "nonlinearity": 2.0,
-    "learning_rate": 0.3,
+    "learning_rate": 0.1,
     "iterations": 50000,
 }
 
