@@ -186,7 +186,7 @@ def fit_bleaching(gray_values0, gray_values1, measurements: tt, weights: tt | fl
         indices = np.asarray(range(m.numel()))
         plt.plot(indices, m, label='All measurements')
         plt.plot(take_diag(indices), take_diag(m), 'or', label='$g_A=g_B$')
-        plt.plot(indices, m_fit.detach(), '--k', label='Fit')
+        plt.plot(indices, m_fit.detach(), '--k', label='Fit $I^N_\\text{flat}\\eta(t)$')
         plt.title('Photobleaching')
         plt.ylabel('Signal')
         plt.xlabel('Time (measurement index)')
