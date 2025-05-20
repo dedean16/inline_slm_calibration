@@ -51,6 +51,8 @@ def compute_weights(measurements, stds, do_weight_plot=False):
     a_n, b_n, c_n = fit_quadratic(measurements, stds**2)
     weights = 1 / noise_model(measurements, 0, b_n, c_n)
 
+    print(f'variance = aS² + bS + c\na={a_n:.4f}, b={b_n:.4f}, c={c_n:.4f}')
+
     if do_weight_plot:
         m_sorted = measurements.flatten().sort().values
         fit_img_var = noise_model(m_sorted, a_n, b_n, c_n)
