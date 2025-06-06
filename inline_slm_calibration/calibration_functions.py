@@ -259,6 +259,7 @@ def learn_field(
         plot_per_its_first: int = 10,
         plot_per_its_fast: int = 100,
         plot_fast_it: int = 100,
+        signal_fit_square_plot: bool = False,
         cmap=colormap_adjust_piecewise('viridis'),
         learning_rate: float = 0.1,
 ) -> tuple[float, float, float, float, nd, nd, nd, nd]:
@@ -284,6 +285,7 @@ def learn_field(
         plot_per_its_first: Plot per this many learning iterations, initially.
         plot_per_its_fast: Plot per this many learning iterations, after iteration plot_fast_it.
         plot_fast_it: After this iteration, plot less often.
+        signal_fit_square_plot: If True, create a square 2x2 plot instead of a 1x4 plot for the signal fit.
         cmap: Colormap for plotting signal measurements and model. Non-linear colormap may be useful for highly bleached
             measurements.
         learning_rate: Learning rate of the optimizer.
@@ -365,9 +367,16 @@ def learn_field(
     phase -= phase.mean()
 
     if do_signal_fit_plot:
-        plt.figure(figsize=(17, 4.3))
-        plt.subplots_adjust(left=0.05, right=0.98, bottom=0.15)
-        plot_result_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1, weights, cmap=cmap)
+        if signal_fit_square_plot:
+            plt.figure(figsize=(9, 9))
+            plt.subplots_adjust(left=0.08, right=0.98, bottom=0.08, top=0.95, hspace=0.20, wspace=0.20)
+            plot_result_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1, weights, cmap=cmap,
+                                     nrows=2, ncols=2)
+        else:
+            plt.figure(figsize=(17, 4.3))
+            plt.subplots_adjust(left=0.05, right=0.98, bottom=0.15)
+            plot_result_feedback_fit(measurements, predicted_signal, gray_values0, gray_values1, weights, cmap=cmap)
+
         plt.pause(0.1)
 
     if do_live_plot:

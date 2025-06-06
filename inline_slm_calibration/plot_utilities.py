@@ -117,19 +117,19 @@ def plot_feedback_fit(feedback_measurements, feedback, gray_values0, gray_values
 
 
 def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray_values1, weights,
-                             cmap=colormap_adjust_piecewise('viridis')):
+                             cmap=colormap_adjust_piecewise('viridis'), nrows=1, ncols=4):
     extent = (gray_values1.min()-0.5, gray_values1.max()+0.5, gray_values0.max()+0.5, gray_values0.min()-0.5)
     vmin = torch.minimum(feedback_measurements.min(), feedback.min())
     vmax = torch.maximum(feedback_measurements.max(), feedback.max())
 
-    plt.subplot(1, 4, 1)
+    plt.subplot(nrows, ncols, 1)
     plt.imshow(feedback_measurements.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax, cmap=cmap)
     plt.title("a. Measured signal")
     plt.xlabel('$g_B$')
     plt.ylabel('$g_A$')
     plt.colorbar()
 
-    plt.subplot(1, 4, 2)
+    plt.subplot(nrows, ncols, 2)
     plt.imshow(feedback.detach(), extent=extent, interpolation="nearest", vmin=vmin, vmax=vmax, cmap=cmap)
     plt.title("b. Fit signal")
     plt.xlabel('$g_B$')
@@ -137,7 +137,7 @@ def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray
     plt.colorbar()
 
     weighted_residual = ((feedback_measurements - feedback) * weights).detach()
-    plt.subplot(1, 4, 3)
+    plt.subplot(nrows, ncols, 3)
     plt.imshow(weighted_residual, extent=extent, interpolation="nearest", cmap='magma')
     plt.title("c. Weighted residual")
     plt.xlabel('$g_B$')
@@ -145,7 +145,7 @@ def plot_result_feedback_fit(feedback_measurements, feedback, gray_values0, gray
     plt.colorbar()
 
     wr_std = weighted_residual.std()
-    plt.subplot(1, 4, 4)
+    plt.subplot(nrows, ncols, 4)
     plt.hist(weighted_residual.flatten(), bins=31)
     plt.title("d. Histogram")
     plt.xlabel('Weighted residuals')
