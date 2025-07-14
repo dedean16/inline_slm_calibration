@@ -101,7 +101,7 @@ def import_inline_calibration(inline_file, do_import_plot=False) -> tuple[nd, nd
     print('Importing new inline measurements...')
     npz_data = np.load(inline_file)     # Note: dimension 0 is unused
     measurements = npz_data["frames"].mean(axis=(0, 1, 2)) - npz_data['dark_frame'].mean()
-    stds = npz_data["frames"].std(axis=(0, 1, 2))
+    stds = npz_data["frames"].std(axis=(0, 1, 2), ddof=1)   # = sqrt( sample variance )
     gv0 = npz_data['gray_values1'][0]
     gv1 = npz_data['gray_values2'][0]
 
