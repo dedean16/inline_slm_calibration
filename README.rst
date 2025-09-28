@@ -2,7 +2,7 @@ Inline calibration of spatial light modulators in nonlinear microscopy
 ======================================================================
 
 Python implementation of inline calibration of the field response of a spatial light modulator in a nonlinear
-microscope. Read the pre-print article on https://arxiv.org/abs/2505.22482. Download the corresponding measurement data from https://data.4tu.nl/datasets/e06926cc-5f6e-4fc0-8170-16d71d5b1c1e.
+microscope. Read the open access article on https://doi.org/10.1364/AO.567871. Download the corresponding measurement data from https://data.4tu.nl/datasets/e06926cc-5f6e-4fc0-8170-16d71d5b1c1e.
 
 Installation
 ------------
